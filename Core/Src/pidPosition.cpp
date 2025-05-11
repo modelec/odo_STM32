@@ -151,5 +151,6 @@ std::array<double, 2> PidPosition::updateNouvelOrdreVitesse(Point pointActuel) {
     double vitesseGauche = vitesseLineaire - (this->L / 2) * vitesseAngulaire;
     double vitesseDroite = vitesseLineaire + (this->L / 2) * vitesseAngulaire;
 
-    return {vitesseGauche, vitesseDroite};
+    //return {vitesseGauche, vitesseDroite};
+    return {0.5, 0.5};
 }

@@ -50,7 +50,7 @@ float Pid::getKd(){
 
 //Methodes
 int Pid::getPWMCommand(float vitesse){
-	constexpr float VITESSE_MAX = 0.235f;  // m/s
+	constexpr float VITESSE_MAX = 0.643f;  // m/s
 	constexpr int PWM_MAX = 626;           // commande PWM max
 	constexpr int PWM_MIN = 30;            // zone morte (optionnelle)
 
@@ -65,16 +65,19 @@ int Pid::getPWMCommand(float vitesse){
 	    // Conversion m/s -> PWM avec conservation du signe
     float pwm = (PWM_MAX * std::abs(vitesse)) / VITESSE_MAX;
 
+
+
+
+
 	    // Application d'un seuil minimal pour éviter les très faibles commandes
-    if (pwm < PWM_MIN){
+    /*if (pwm < PWM_MIN){
     	pwm = 0;
-    }
+    }*/
     int32_t pwm_signed = (vitesse >= 0) ? std::floor(pwm) : -std::floor(pwm);
 
     char msg[64];
-    // Debug UART ici
-    sprintf(msg, "Vitesse à atteindre: %.3f m/s, équivalen PWM: %ld\r\n", vitesse, pwm_signed);
-    CDC_Transmit_FS((uint8_t*)msg, strlen(msg));
+    //sprintf(msg, "Vitesse à atteindre: %.3f m/s, équivalent PWM: %d\r\n", vitesse, pwm_signed);
+    //CDC_Transmit_FS((uint8_t*)msg, strlen(msg));
 
 
 	// Renvoi avec le bon signe

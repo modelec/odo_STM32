@@ -32,6 +32,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+void ModelecOdometrySetup(void **out_pid, void **out_pidG, void **out_pidD);
+
+void ModelecOdometryLoop(void* pid, void* pidG, void* pidD);
 
 /* USER CODE END PD */
 
@@ -66,6 +69,7 @@ static void MX_TIM8_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
 
 /* USER CODE END 0 */
 
@@ -106,26 +110,30 @@ int main(void)
   MX_USB_Device_Init();
   /* USER CODE BEGIN 2 */
 
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1); // IN1A
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2); // IN2A
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); // IN1B
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2); // IN2B
+  HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
+
+  void *pid;
+  void *pidG;
+  void *pidD;
+  ModelecOdometrySetup(&pid, &pidG, &pidD);
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_Delay(3000);  // Attends 3 secondes après le boot
+  HAL_Delay(5000);  // Attends 5 secondes après le boot
   char test[] = "Hello from STM32\r\n";
   CDC_Transmit_FS((uint8_t*)test, strlen(test));
   while (1)
   {
+	  ModelecOdometryLoop(pid, pidG, pidD);
     /* USER CODE END WHILE */
-	  // LED ON
-	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-	  char msg_on[] = "LED ON\r\n";
-	  while(CDC_Transmit_FS((uint8_t*)msg_on, strlen(msg_on)) == USBD_BUSY);
-	  HAL_Delay(1000);
-
-      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-      char msg_off[] = "LED OFF\r\n";
-      while(CDC_Transmit_FS((uint8_t*)msg_off, strlen(msg_off)) == USBD_BUSY);
-      HAL_Delay(1000);
 
     /* USER CODE BEGIN 3 */
   }
@@ -460,6 +468,10 @@ static void MX_TIM8_Init(void)
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
   sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+  if (HAL_TIM_PWM_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
   if (HAL_TIM_PWM_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
@@ -504,7 +516,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
@@ -525,8 +537,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF15_EVENTOUT;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB0 PB6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_6;
+  /*Configure GPIO pin : PB0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

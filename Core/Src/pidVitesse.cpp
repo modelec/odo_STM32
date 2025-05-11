@@ -1,4 +1,8 @@
 #include "pidVitesse.h"
+#include <cstring>
+#include <cstdio>
+#include "usbd_cdc_if.h"
+
 
 // Constructeur
 PidVitesse::PidVitesse(float kp, float ki, float kd, float consigneVitesseFinale) : Pid(kp, ki, kd) {
@@ -82,7 +86,7 @@ void PidVitesse::updateNouvelleVitesse(float vitesseActuelle) {
 		 	 - integral 	 : on multiplie ki par la somme des erreurs passées
 		 	 - derivee		 : on multiplie kd par la variation de l'erreur
 	 */
-
+	//vitesseActuelle = 0.0;
 
     // Mise à jour de l'erreur de vitesse
     this->updateErreurVitesse(vitesseActuelle);
@@ -94,7 +98,19 @@ void PidVitesse::updateNouvelleVitesse(float vitesseActuelle) {
     this->integral += this->erreurVitesse;
 
     // Calcul de la nouvelle consigne de vitesse avec PID
-    this->nouvelleConsigneVitesse = this->getKp() * this->erreurVitesse +
+    float pid = this->getKp() * this->erreurVitesse +
                                     this->getKi() * this->integral +
                                     this->getKd() * this->derivee;
+    this->nouvelleConsigneVitesse = pid;
+
+    char buffer[128];
+    snprintf(buffer, sizeof(buffer),
+             "[PID] Cons: %.3f | Mes: %.3f | Err: %.3f | I: %.3f | D: %.3f | Out: %.3f\r\n",
+             this->consigneVitesseFinale,
+             vitesseActuelle,
+             this->erreurVitesse,
+             this->integral,
+             this->derivee,
+             this->nouvelleConsigneVitesse);
+    CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
 }
