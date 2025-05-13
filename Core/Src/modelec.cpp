@@ -152,7 +152,7 @@ void ModelecOdometryUpdate() {
 
 	char msg[128];
 	sprintf(msg, " Update current position : X: %.3f m, Y: %.3f m, Theta: %.3f rad\r\n", x, y, theta);
-	//CDC_Transmit_FS((uint8_t*) msg, strlen(msg));
+	CDC_Transmit_FS((uint8_t*) msg, strlen(msg));
 	float dt = 0.01f; // 10 ms
 
 	// Calcul des vitesses des roues
@@ -193,6 +193,7 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD) {
 	//On met à jour toutes les 10ms
 	if (isDelayPassed(10)) {
 		ModelecOdometryUpdate();
+		/*
 		HAL_Delay(1000);
 		Point currentPoint(x, y,theta, StatePoint::INTERMEDIAIRE);
 		Point targetPoint(0.20, 0.20,0, StatePoint::FINAL);
@@ -205,6 +206,7 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD) {
 		determinationCoefPosition(currentPoint,targetPoint, *pidPosition, *pidVitesseG, *pidVitesseD);
 		HAL_Delay(1000);
 		motor.update();
+		*/
 
 
 
