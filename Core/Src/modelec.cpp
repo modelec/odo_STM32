@@ -12,6 +12,8 @@
 #include "point.h"
 #include "pidPosition.h"
 #include "usbd_cdc_if.h"
+#include "commSTM.h"
+
 extern "C" {
 
 extern TIM_HandleTypeDef htim3;
@@ -193,6 +195,7 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD) {
 	//On met à jour toutes les 10ms
 	if (isDelayPassed(10)) {
 		ModelecOdometryUpdate();
+		USB_Comm_Process();
 		/*
 		HAL_Delay(1000);
 		Point currentPoint(x, y,theta, StatePoint::INTERMEDIAIRE);
