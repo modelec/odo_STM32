@@ -100,8 +100,8 @@ int main(void)
   MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
 
- // HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1); // IN1A
-  //HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2); // IN2A
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1); // IN1A
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2); // IN2A
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); // IN1B
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2); // IN2B
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
