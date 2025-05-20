@@ -22,7 +22,6 @@
 #include "usb_device.h"
 #include "gpio.h"
 
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -98,6 +97,7 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM3_Init();
   MX_USB_Device_Init();
+  MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
 
  // HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1); // IN1A

@@ -79,7 +79,7 @@ void determinationCoefPosition(Point objectifPoint, Point pointActuel, PidPositi
 	int erreurG = pidG.getPWMCommand(nouvelOrdreG);
 	int erreurD = pidD.getPWMCommand(nouvelOrdreD);
 
-	const int maxErreur = 20;
+	const int maxErreur = 5;
 
 	if (erreurG > maxErreur) {
 	    erreurG = maxErreur;
@@ -112,7 +112,7 @@ void ModelecOdometrySetup(void **out_pid, void **out_pidG, void **out_pidD) {
 	theta = 0.0f;
 	//motor.accelerer(300);
 
-    *out_pid = new PidPosition(0,0,0,0,0,0,Point());
+    *out_pid = new PidPosition(1.5,0.02,0.4,3.0, 0.01, 0.6, Point());
     *out_pidG = new PidVitesse(0.2, 0.05, 0.01, 0);
     *out_pidD = new PidVitesse(0.2, 0.05, 0.01, 0);
 
@@ -172,8 +172,8 @@ void ModelecOdometryUpdate() {
 
 	//motor.setLeftCurrentSpeed(vitesseLeft);
 	//motor.setRightCurrentSpeed(vitesseRight);
-	motor.setLeftCurrentSpeed(motor.getLeftCurrentSpeed()+0.05);
-	motor.setRightCurrentSpeed(motor.getRightCurrentSpeed()+0.05);
+	motor.setLeftCurrentSpeed(vitesseLeft);
+	motor.setRightCurrentSpeed(vitesseRight);
 }
 
 void publishStatus(){
@@ -195,21 +195,21 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD) {
 	//On met à jour toutes les 10ms
 	if (isDelayPassed(10)) {
 		ModelecOdometryUpdate();
-		USB_Comm_Process();
-		/*
-		HAL_Delay(1000);
+		//USB_Comm_Process();
+
+		//HAL_Delay(1000);
 		Point currentPoint(x, y,theta, StatePoint::INTERMEDIAIRE);
-		Point targetPoint(0.20, 0.20,0, StatePoint::FINAL);
+		Point targetPoint(0.50, 0.0,0, StatePoint::FINAL);
 		char debugMsg[128];
 		sprintf(debugMsg, "Speed avant determination : L=%.3f | R=%.3f\r\n",
-		        motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed());
+		motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed());
 		CDC_Transmit_FS((uint8_t*)debugMsg, strlen(debugMsg));
 
 
 		determinationCoefPosition(currentPoint,targetPoint, *pidPosition, *pidVitesseG, *pidVitesseD);
-		HAL_Delay(1000);
+		//HAL_Delay(1000);
 		motor.update();
-		*/
+
 
 
 
