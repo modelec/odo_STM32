@@ -112,5 +112,5 @@ void PidVitesse::updateNouvelleVitesse(float vitesseActuelle) {
              this->integral,
              this->derivee,
              this->nouvelleConsigneVitesse);
-    CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
+    //CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
 }

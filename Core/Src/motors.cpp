@@ -164,6 +164,6 @@ void Motor::update() {
                  (uint32_t)TIM8->CCR1, (uint32_t)TIM8->CCR2,
                  (uint32_t)TIM1->CCR1, (uint32_t)TIM1->CCR2);
 
-    CDC_Transmit_FS((uint8_t*)msg, strlen(msg));
+    //CDC_Transmit_FS((uint8_t*)msg, strlen(msg));
 }
 

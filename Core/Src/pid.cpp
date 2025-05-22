@@ -16,9 +16,9 @@ Pid::Pid(float kp, float ki, float kd){
 	this->ki = ki;
 	this->kd = kd;
 
-	this->Vmax = 1;	//à remplacer par la vraie valeur, calculable à partir de la rpm
-	this->Wmax = 1; //pareil, à remplacer par la vraie valeur
-	this->L = 0.3; //à remplacer, à mesurer direct entre les deux roues motrices du robot (attention, valeur à mettre en mètre)
+	this->Vmax = 0.235;
+	this->Wmax = 3.11;
+	this->L = 0.151;
 }
 
 // Setters

@@ -8,8 +8,8 @@ private:
     Point erreurPosition, erreurPosition_old;
     Point consignePositionFinale;
 
-    float d[2];			//valeurs calculé dans les méthodes update (position)
-    float i[2];
+    float d[3] = {0.0f, 0.0f, 0.0f};			//valeurs calculé dans les méthodes update (position)
+    float i[3] = {0.0f, 0.0f, 0.0f};
 
     float Kp_theta, Ki_theta, Kd_theta;
 
@@ -46,7 +46,7 @@ public:
     // Méthodes spécifiques à la position
     Point calculErreurPosition(Point p);
     void updateErreurPosition(Point pointActuel);
-    std::array<double, 2> updateNouvelOrdreVitesse(Point pointActuel);
+    std::array<double, 2> updateNouvelOrdreVitesse(Point pointActuel, float vitGauche, float vitDroit);
 
     // Surcharge des méthodes virtuelles
     void updateErreur();

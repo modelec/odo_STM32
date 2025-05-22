@@ -50,12 +50,12 @@ bool isDelayPassed(uint32_t delay) {
 }
 
 //PID
-void determinationCoefPosition(Point objectifPoint, Point pointActuel, PidPosition pid, PidVitesse pidG, PidVitesse pidD){
+void determinationCoefPosition(Point objectifPoint, Point pointActuel, PidPosition& pid, PidVitesse& pidG, PidVitesse& pidD, float vitGauche, float vitDroit){
 	//PidPosition pid(0,0,0,0,0,0,objectifPoint);
 
 
 	pid.setConsignePositionFinale(objectifPoint);
-	std::array<double, 2> vitesse = pid.updateNouvelOrdreVitesse(pointActuel);
+	std::array<double, 2> vitesse = pid.updateNouvelOrdreVitesse(pointActuel, vitGauche, vitDroit);
 
 	char debug_msg[128];
 	sprintf(debug_msg, "[CONS] G: %.3f m/s | D: %.3f m/s\r\n", vitesse[0], vitesse[1]);
@@ -112,7 +112,16 @@ void ModelecOdometrySetup(void **out_pid, void **out_pidG, void **out_pidD) {
 	theta = 0.0f;
 	//motor.accelerer(300);
 
-    *out_pid = new PidPosition(1.5,0.02,0.4,3.0, 0.01, 0.6, Point());
+	*out_pid = new PidPosition(
+	    0.3,   // kp
+	    0.05,  // ki
+	    0.5,   // kd
+	    0.5,   // Kp_theta
+	    0.02,  // Ki_theta
+	    0.7,   // Kd_theta
+	    Point()
+	);
+	//*out_pid = new PidPosition(1.2,0.02,0.8,0, 0, 0, Point());
     *out_pidG = new PidVitesse(0.2, 0.05, 0.01, 0);
     *out_pidD = new PidVitesse(0.2, 0.05, 0.01, 0);
 
@@ -206,7 +215,7 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD) {
 		CDC_Transmit_FS((uint8_t*)debugMsg, strlen(debugMsg));
 
 
-		determinationCoefPosition(currentPoint,targetPoint, *pidPosition, *pidVitesseG, *pidVitesseD);
+		determinationCoefPosition(targetPoint, currentPoint, *pidPosition, *pidVitesseG, *pidVitesseD, motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed()); //TODO vérification inversement target et current
 		//HAL_Delay(1000);
 		motor.update();
 
