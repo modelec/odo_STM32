@@ -80,29 +80,57 @@ void PidVitesse::updateErreurVitesse(float vitesseActuelle) {
 }
 
 void PidVitesse::updateNouvelleVitesse(float vitesseActuelle) {
-	/*
-		 La sortie est calculée en combinant les 3 termes :
-		 	 - proportionnel : on multiplie kp par l'erreur
-		 	 - integral 	 : on multiplie ki par la somme des erreurs passées
-		 	 - derivee		 : on multiplie kd par la variation de l'erreur
-	 */
-	//vitesseActuelle = 0.0;
+    // === Paramètres de sécurité / stabilisation ===
+    const float zoneMorteErreur     = 0.02f;   // seuil min pour agir sur l'erreur
+    const float zoneMorteSortie    = 0.005f;  // seuil min pour agir sur la sortie
+    const float integralMax        = 10.0f;   // anti-windup
+    const float deriveeMax         = 1.0f;    // limitation de la dérivée
 
     // Mise à jour de l'erreur de vitesse
     this->updateErreurVitesse(vitesseActuelle);
 
-    // Calcul du terme dérivé
+    // Zone morte sur l’erreur
+    if (fabs(this->erreurVitesse) < zoneMorteErreur) {
+        this->erreurVitesse = 0.0f;
+    }
+    if (fabs(this->consigneVitesseFinale) < 0.001f) {
+        this->integral = 0.0f;
+        this->derivee = 0.0f;
+        this->nouvelleConsigneVitesse = 0.0f;
+        return;
+    }
+
+
+    // Calcul du terme dérivé (bruit possible)
     this->derivee = this->erreurVitesse - this->erreurVitesse_old;
+
+    // Limitation de la dérivée (anti-pics)
+    if (this->derivee > deriveeMax) this->derivee = deriveeMax;
+    else if (this->derivee < -deriveeMax) this->derivee = -deriveeMax;
 
     // Mise à jour du terme intégral
     this->integral += this->erreurVitesse;
 
-    // Calcul de la nouvelle consigne de vitesse avec PID
+    // Anti-windup sur l'intégrale
+    if (this->integral > integralMax) this->integral = integralMax;
+    else if (this->integral < -integralMax) this->integral = -integralMax;
+
+    // Calcul de la commande PID
     float pid = this->getKp() * this->erreurVitesse +
-                                    this->getKi() * this->integral +
-                                    this->getKd() * this->derivee;
+                this->getKi() * this->integral +
+                this->getKd() * this->derivee;
+
+    // Zone morte sur la sortie PID
+    if (fabs(pid) < zoneMorteSortie) {
+        pid = 0.0f;
+        // Optionnel : reset intégrale pour couper net le mouvement
+        this->integral = 0.0f;
+    }
+
+    // Application de la commande
     this->nouvelleConsigneVitesse = pid;
 
+    // === DEBUG ===
     char buffer[128];
     snprintf(buffer, sizeof(buffer),
              "[PID] Cons: %.3f | Mes: %.3f | Err: %.3f | I: %.3f | D: %.3f | Out: %.3f\r\n",
@@ -112,5 +140,6 @@ void PidVitesse::updateNouvelleVitesse(float vitesseActuelle) {
              this->integral,
              this->derivee,
              this->nouvelleConsigneVitesse);
-    //CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
+    // CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
 }
+
