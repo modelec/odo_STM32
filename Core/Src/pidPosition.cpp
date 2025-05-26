@@ -196,7 +196,7 @@ std::array<double, 2> PidPosition::updateNouvelOrdreVitesse(Point pointActuel, f
     sprintf(log, "[SET] VITESSE SORTIE DE PID POS | G: %.3f m/s | D: %.3f m/s\r\n", vitesseGauche, vitesseDroite);
     CDC_Transmit_FS((uint8_t*)log, strlen(log));
 
-    if (fabs(erreurAvant) < 0.05 && fabs(erreurLat) < 0.05 && fabs(erreurPosition.getTheta()) < 0.5) {
+    if (fabs(erreurAvant) < 0.005 && fabs(erreurLat) < 0.005 && fabs(erreurPosition.getTheta()) < 0.5) {
         sprintf(log, "[PID] OBJECTIF ATTEINT — Robot à l'arrêt\r\n");
         CDC_Transmit_FS((uint8_t*)log, strlen(log));
         return {0.0, 0.0};

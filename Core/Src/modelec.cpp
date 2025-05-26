@@ -62,8 +62,8 @@ void determinationCoefPosition(Point objectifPoint, Point pointActuel, PidPositi
 
 
 	pid.setConsignePositionFinale(objectifPoint);
-	//std::array<double, 2> vitesse = pid.updateNouvelOrdreVitesse(pointActuel, vitGauche, vitDroit);
-	std::array<double, 2> vitesse = {0.05,0.05};
+	std::array<double, 2> vitesse = pid.updateNouvelOrdreVitesse(pointActuel, vitGauche, vitDroit);
+	//std::array<double, 2> vitesse = {0.05,0.05};
 
 	char debug_msg[128];
 	sprintf(debug_msg, "[CONS] G: %.3f m/s | D: %.3f m/s\r\n", vitesse[0], vitesse[1]);
@@ -121,6 +121,19 @@ void ModelecOdometrySetup(void **out_pid, void **out_pidG, void **out_pidD) {
 	//motor.accelerer(300);
 
 	*out_pid = new PidPosition(
+	    0.8,   // kp — un poil plus agressif, il pousse plus vers la cible
+	    0.0,   // ki — toujours off pour éviter du dépassement imprévu
+	    0.015, // kd — un peu moins de freinage anticipé
+
+	    0.5,   // kpTheta — peut rester soft pour éviter les oscillations d’orientation
+	    0.0,   // kiTheta
+	    0.15,  // kdTheta — un peu moins de frein sur la rotation
+	    Point()
+	);
+
+	/*
+
+	 *out_pid = new PidPosition(
 	    0.6,   // kp — réduit pour adoucir la réaction
 	    0.0,   // ki — on évite encore pour l’instant
 	    0.03,  // kd — un peu de dérivée pour stabiliser
@@ -130,6 +143,8 @@ void ModelecOdometrySetup(void **out_pid, void **out_pidG, void **out_pidD) {
 	    0.2,   // kdTheta — diminue les surcorrections d'angle
 	    Point()
 	);
+
+	 */
 
 	//*out_pid = new PidPosition(1.2,0.02,0.8,0, 0, 0, Point());
 	*out_pidG = new PidVitesse(0.2, 0.0, 0.01, 0);
