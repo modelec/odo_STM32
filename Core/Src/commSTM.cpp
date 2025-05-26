@@ -72,7 +72,7 @@ void USB_Comm_Process(void) {
         }
         else if (strcmp(token, "SPEED") == 0) {
             float vx, vy, omega;
-            Comm_GetSpeed(&vx, &vy, &omega);  // 3 valeurs
+            Comm_GetSpeed(&vx, &vy, &omega);
             char response[64];
             snprintf(response, sizeof(response), "SET;SPEED;%.2f;%.2f;%.2f\n", vx, vy, omega);
             USB_Comm_Send(response);

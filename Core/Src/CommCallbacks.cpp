@@ -9,30 +9,30 @@
 
 #include "CommCallbacks.hpp"
 #include "main.h"
-#include "modelec.cpp"
+#include "modelec.h"
 #include "motors.h"
 #include "pid.h"
 #include "pidPosition.h"
 
 void Comm_GetPosition(float* x, float* y, float* theta) {
-    *x = currentPoint.getX();
-    *y = currentPoint.getY();
-    *theta = currentPoint.getTheta();
+    //*x = currentPoint.getX();
+    //*y = currentPoint.getY();
+    //*theta = currentPoint.getTheta();
 }
 
 void Comm_SetPosition(float x, float y, float theta) {
-    currentPoint.setX(x);
-    currentPoint.setY(y);
-    currentPoint.setTheta(theta);
+    //currentPoint.setX(x);
+    //currentPoint.setY(y);
+    //currentPoint.setTheta(theta);
 }
 
 void Comm_GetSpeed(float* vx, float* vy, float* omega){
-    *vx = vitesseLeft;
-    *vy = vitesseRight;
-    *omega = vitesseAngulaire;
+//    *vx = vitesseLeft;
+//    *vy = vitesseRight;
+//    *omega = vitesseAngulaire;
 }
 
-void Comm_GetPID(float* p, float* i, float* d) {
+/*void Comm_GetPID(float* p, float* i, float* d) {
     PIDController::getInstance().getCoefficients(*p, *i, *d);
 }
 
@@ -49,4 +49,4 @@ void Comm_AddWaypoint(int id, int type, float x, float y, float theta) {
     Waypoint wp(id, type, x, y, theta);
     WaypointManager::getInstance().addWaypoint(wp);
 }
-
+*/

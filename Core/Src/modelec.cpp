@@ -1,19 +1,5 @@
-#include "motors.h"
-#include "main.h"
-//#include "stm32l0xx_hal.h"
-#include "stm32g4xx_hal.h"
-//#include "stm32g4xx_hal_uart.h"
 
-#include <cstdio>
-#include <cstring>
-#include <math.h>
-#include <algorithm>
-#include "pidVitesse.h"
-#include "pid.h"
-#include "point.h"
-#include "pidPosition.h"
-#include "usbd_cdc_if.h"
-#include "commSTM.h"
+#include "modelec.h"
 
 extern "C" {
 
@@ -204,14 +190,14 @@ void receiveControlParams(){
 
 }
 
-void ModelecOdometryLoop(void* pid, void* pidG, void* pidD) {
+void ModelecOdometryLoop(void* pid, void* pidG, void* pidD, int* cnt) {
 	PidPosition* pidPosition = static_cast<PidPosition*>(pid);
 	PidVitesse* pidVitesseG = static_cast<PidVitesse*>(pidG);
 	PidVitesse* pidVitesseD = static_cast<PidVitesse*>(pidD);
 
 	//receiveControlParams();
 	//GPIOC->ODR ^= (1 << 10);
-	int cnt=0;
+
 	//On met à jour toutes les 10ms
 	if (isDelayPassed(10)) {
 		ModelecOdometryUpdate();
@@ -229,10 +215,10 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD) {
 		CDC_Transmit_FS((uint8_t*)debugMsg, strlen(debugMsg));
 
 
-		determinationCoefPosition(targetPoint, currentPoint, *pidPosition, *pidVitesseG, *pidVitesseD, motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed(), cnt);
+		determinationCoefPosition(targetPoint, currentPoint, *pidPosition, *pidVitesseG, *pidVitesseD, motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed(), *cnt);
 		//HAL_Delay(1000);
 		motor.update();
-		cnt++;
+		(*cnt)++;
 
 
 

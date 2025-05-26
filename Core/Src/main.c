@@ -21,6 +21,7 @@
 #include "tim.h"
 #include "usb_device.h"
 #include "gpio.h"
+#include "modelec.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -36,7 +37,7 @@
 /* USER CODE BEGIN PD */
 void ModelecOdometrySetup(void **out_pid, void **out_pidG, void **out_pidD);
 
-void ModelecOdometryLoop(void* pid, void* pidG, void* pidD);
+//void ModelecOdometryLoop(void* pid, void* pidG, void* pidD);
 
 /* USER CODE END PD */
 
@@ -50,6 +51,7 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD);
 /* USER CODE BEGIN PV */
 int counter1=0;
 int counter2=0;
+int cnt=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -124,7 +126,7 @@ int main(void)
   {
 	  counter2 = __HAL_TIM_GET_COUNTER(&htim2);
 	  counter1 = __HAL_TIM_GET_COUNTER(&htim3);
-	  ModelecOdometryLoop(pid, pidG, pidD);
+	  ModelecOdometryLoop(pid, pidG, pidD, &cnt);
 
     /* USER CODE END WHILE */
 
