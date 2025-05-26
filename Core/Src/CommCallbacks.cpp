@@ -6,10 +6,10 @@
  */
 
 
-/*
+
 #include "CommCallbacks.hpp"
 #include "main.h"
-#include "modelec.cpp"
+#include "modelec.h"
 #include "motors.h"
 #include "pid.h"
 #include "pidPosition.h"
@@ -33,9 +33,10 @@ void Comm_GetSpeed(float* vx, float* vy, float* omega){
 }
 
 void Comm_GetPID(float* p, float* i, float* d) {
-    PIDController::getInstance().getCoefficients(*p, *i, *d);
+    //PIDController::getInstance().getCoefficients(*p, *i, *d);
 }
 
+/*
 void Comm_SetPID(float p, float i, float d) {
     PIDController::getInstance().setCoefficients(p, i, d);
 }
@@ -48,6 +49,6 @@ void Comm_StartOdometry(bool on) {
 void Comm_AddWaypoint(int id, int type, float x, float y, float theta) {
     Waypoint wp(id, type, x, y, theta);
     WaypointManager::getInstance().addWaypoint(wp);
-}
+}*/
 
-*/
+

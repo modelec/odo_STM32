@@ -14,6 +14,7 @@
 #include "pidPosition.h"
 #include "usbd_cdc_if.h"
 #include "commSTM.h"
+#include "modelec.h"
 
 extern "C" {
 
@@ -245,10 +246,6 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD) {
 		determinationCoefPosition(targetPoint, currentPoint, *pidPosition, *pidVitesseG, *pidVitesseD, motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed());
 		//HAL_Delay(1000);
 		motor.update();
-
-
-
-
 	}
 
 	publishStatus();
