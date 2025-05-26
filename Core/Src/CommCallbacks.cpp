@@ -6,7 +6,7 @@
  */
 
 
-
+/*
 #include "CommCallbacks.hpp"
 #include "main.h"
 #include "modelec.cpp"
@@ -50,3 +50,4 @@ void Comm_AddWaypoint(int id, int type, float x, float y, float theta) {
     WaypointManager::getInstance().addWaypoint(wp);
 }
 
+*/

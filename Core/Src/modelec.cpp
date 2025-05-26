@@ -57,16 +57,13 @@ bool isDelayPassed(uint32_t delay) {
 }
 
 //PID
-void determinationCoefPosition(Point objectifPoint, Point pointActuel, PidPosition& pid, PidVitesse& pidG, PidVitesse& pidD, float vitGauche, float vitDroit, int cnt){
+void determinationCoefPosition(Point objectifPoint, Point pointActuel, PidPosition& pid, PidVitesse& pidG, PidVitesse& pidD, float vitGauche, float vitDroit){
 	//PidPosition pid(0,0,0,0,0,0,objectifPoint);
 
 
 	pid.setConsignePositionFinale(objectifPoint);
 	//std::array<double, 2> vitesse = pid.updateNouvelOrdreVitesse(pointActuel, vitGauche, vitDroit);
-	std::array<double, 2> vitesse = {0, 0};
-	if(cnt<18){
-		vitesse = {0.235, 0.235};
-	}
+	std::array<double, 2> vitesse = {0.05,0.05};
 
 	char debug_msg[128];
 	sprintf(debug_msg, "[CONS] G: %.3f m/s | D: %.3f m/s\r\n", vitesse[0], vitesse[1]);
@@ -84,29 +81,31 @@ void determinationCoefPosition(Point objectifPoint, Point pointActuel, PidPositi
 	float nouvelOrdreG = pidG.getNouvelleConsigneVitesse();
 	float nouvelOrdreD = pidD.getNouvelleConsigneVitesse();
 
-	sprintf(debug_msg, "[CORR] G: %.3f m/s | D: %.3f m/s\r\n", nouvelOrdreG, nouvelOrdreD);
-	CDC_Transmit_FS((uint8_t*)debug_msg, strlen(debug_msg));
+
 
 	int erreurG = pidG.getPWMCommand(nouvelOrdreG);
 	int erreurD = pidD.getPWMCommand(nouvelOrdreD);
 
-	// 1. On récupère l'erreur de vitesse actuelle pour chaque PID
-	float erreurVitG = pidG.getErreurVitesse();
-	float erreurVitD = pidD.getErreurVitesse();
+	// Limite fixe du delta PWM
+	const int MAX_ERREUR_PWM = 50;
 
-	// 2. On détermine dynamiquement la limite du delta PWM à appliquer
-	int maxErreurG = std::min(std::max((int)(fabs(erreurVitG) * 300.0f), 20), 150);
-	int maxErreurD = std::min(std::max((int)(fabs(erreurVitD) * 300.0f), 20), 150);
+	if (erreurG > MAX_ERREUR_PWM)
+	    erreurG = MAX_ERREUR_PWM;
+	else if (erreurG < -MAX_ERREUR_PWM)
+	    erreurG = -MAX_ERREUR_PWM;
 
-	// 3. On applique la limite dynamique sur les erreurs de PWM
-	erreurG = std::min(std::max(erreurG, -maxErreurG), maxErreurG);
-	erreurD = std::min(std::max(erreurD, -maxErreurD), maxErreurD);
+	if (erreurD > MAX_ERREUR_PWM)
+	    erreurD = MAX_ERREUR_PWM;
+	else if (erreurD < -MAX_ERREUR_PWM)
+	    erreurD = -MAX_ERREUR_PWM;
 
 	int ordrePWMG = motor.getLeftCurrentPWM() + erreurG;
 	int ordrePWMD = motor.getRightCurrentPWM() + erreurD;
 
 	motor.setLeftTargetPWM(ordrePWMG);
 	motor.setRightTargetPWM(ordrePWMD);
+	sprintf(debug_msg, "[CORR] G: %.3f m/s | D: %.3f m/s\r\n", ordrePWMG, ordrePWMD);
+	CDC_Transmit_FS((uint8_t*)debug_msg, strlen(debug_msg));
 
 
 }
@@ -133,8 +132,8 @@ void ModelecOdometrySetup(void **out_pid, void **out_pidG, void **out_pidD) {
 	);
 
 	//*out_pid = new PidPosition(1.2,0.02,0.8,0, 0, 0, Point());
-    *out_pidG = new PidVitesse(0.2, 0.05, 0.01, 0);
-    *out_pidD = new PidVitesse(0.2, 0.05, 0.01, 0);
+	*out_pidG = new PidVitesse(0.2, 0.0, 0.01, 0);
+	*out_pidD = new PidVitesse(0.2, 0.0, 0.01, 0);
 
 	return;
 
@@ -211,7 +210,6 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD) {
 
 	//receiveControlParams();
 	//GPIOC->ODR ^= (1 << 10);
-	int cnt=0;
 	//On met à jour toutes les 10ms
 	if (isDelayPassed(10)) {
 		ModelecOdometryUpdate();
@@ -221,7 +219,7 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD) {
 		currentPoint.setX(x);
 		currentPoint.setY(y);
 		currentPoint.setTheta(theta);
-		//Point currentPoint(x, y,theta, StatePoint::INTERMEDIAIRE);
+		Point currentPoint(x, y,theta, StatePoint::INTERMEDIAIRE);
 		Point targetPoint(0.50, 0.0,0, StatePoint::FINAL);
 		char debugMsg[128];
 		sprintf(debugMsg, "Speed avant determination : L=%.3f | R=%.3f\r\n",
@@ -229,10 +227,9 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD) {
 		CDC_Transmit_FS((uint8_t*)debugMsg, strlen(debugMsg));
 
 
-		determinationCoefPosition(targetPoint, currentPoint, *pidPosition, *pidVitesseG, *pidVitesseD, motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed(), cnt);
+		determinationCoefPosition(targetPoint, currentPoint, *pidPosition, *pidVitesseG, *pidVitesseD, motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed());
 		//HAL_Delay(1000);
 		motor.update();
-		cnt++;
 
 
 
