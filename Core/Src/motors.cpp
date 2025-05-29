@@ -158,12 +158,12 @@ void Motor::update() {
         //[STM32] PWM_LEFT: 600 | PWM_RIGHT: 600 || TIM8->CCR1: 0 | TIM8->CCR2: 0 M1->CCR1: 600 | TIM1->CCR2: 0
 
     char msg[128];
-    snprintf(msg, sizeof(msg),
+    /*snprintf(msg, sizeof(msg),
                  "PWM_LEFT: %d | PWM_RIGHT: %d || TIM8->CCR1: %lu | TIM8->CCR2: %lu | TIM1->CCR1: %lu | TIM1->CCR2: %lu\r\n",
                  this->leftCurrent_PWM, this->rightCurrent_PWM,
                  (uint32_t)TIM8->CCR1, (uint32_t)TIM8->CCR2,
                  (uint32_t)TIM1->CCR1, (uint32_t)TIM1->CCR2);
 
-    CDC_Transmit_FS((uint8_t*)msg, strlen(msg));
+    CDC_Transmit_FS((uint8_t*)msg, strlen(msg));*/
 }
 

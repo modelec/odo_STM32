@@ -1,7 +1,9 @@
 
 #include "modelec.h"
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim2;
@@ -23,11 +25,15 @@ uint16_t lastPosRight, lastPosLeft;
 // x et y sont en mètres
 float x, y, theta;
 
-Point currentPoint(0, 0,0, StatePoint::INTERMEDIAIRE);
+Point currentPoint(0.0, 0.0,0, StatePoint::INTERMEDIAIRE);
+Point targetPoint(0.5,0.0, 0, StatePoint::INTERMEDIAIRE);
+
+
 float vitesseLineaire;
 float vitesseAngulaire;
 float vitesseLeft;
 float vitesseRight;
+bool odo_active = 0;
 
 uint32_t lastTick = 0;
 
@@ -48,15 +54,12 @@ void determinationCoefPosition(Point objectifPoint, Point pointActuel, PidPositi
 
 
 	pid.setConsignePositionFinale(objectifPoint);
-	//std::array<double, 2> vitesse = pid.updateNouvelOrdreVitesse(pointActuel, vitGauche, vitDroit);
-	std::array<double, 2> vitesse = {0, 0};
-	if(cnt<18){
-		vitesse = {0.235, 0.235};
-	}
+	std::array<double, 2> vitesse = pid.updateNouvelOrdreVitesse(pointActuel, vitGauche, vitDroit);
+	//std::array<double, 2> vitesse = {0, 0};
 
-	char debug_msg[128];
+	/*char debug_msg[128];
 	sprintf(debug_msg, "[CONS] G: %.3f m/s | D: %.3f m/s\r\n", vitesse[0], vitesse[1]);
-	CDC_Transmit_FS((uint8_t*)debug_msg, strlen(debug_msg));
+	CDC_Transmit_FS((uint8_t*)debug_msg, strlen(debug_msg));*/
 
 	pidG.setConsigneVitesseFinale(vitesse[0]);
 	pidD.setConsigneVitesseFinale(vitesse[1]);
@@ -70,23 +73,24 @@ void determinationCoefPosition(Point objectifPoint, Point pointActuel, PidPositi
 	float nouvelOrdreG = pidG.getNouvelleConsigneVitesse();
 	float nouvelOrdreD = pidD.getNouvelleConsigneVitesse();
 
-	sprintf(debug_msg, "[CORR] G: %.3f m/s | D: %.3f m/s\r\n", nouvelOrdreG, nouvelOrdreD);
-	CDC_Transmit_FS((uint8_t*)debug_msg, strlen(debug_msg));
+	/*sprintf(debug_msg, "[CORR] G: %.3f m/s | D: %.3f m/s\r\n", nouvelOrdreG, nouvelOrdreD);
+	CDC_Transmit_FS((uint8_t*)debug_msg, strlen(debug_msg));*/
 
 	int erreurG = pidG.getPWMCommand(nouvelOrdreG);
 	int erreurD = pidD.getPWMCommand(nouvelOrdreD);
 
-	// 1. On récupère l'erreur de vitesse actuelle pour chaque PID
-	float erreurVitG = pidG.getErreurVitesse();
-	float erreurVitD = pidD.getErreurVitesse();
 
-	// 2. On détermine dynamiquement la limite du delta PWM à appliquer
-	int maxErreurG = std::min(std::max((int)(fabs(erreurVitG) * 300.0f), 20), 150);
-	int maxErreurD = std::min(std::max((int)(fabs(erreurVitD) * 300.0f), 20), 150);
+	const int MAX_ERREUR_PWM = 50;
 
-	// 3. On applique la limite dynamique sur les erreurs de PWM
-	erreurG = std::min(std::max(erreurG, -maxErreurG), maxErreurG);
-	erreurD = std::min(std::max(erreurD, -maxErreurD), maxErreurD);
+	if (erreurG > MAX_ERREUR_PWM)
+	    erreurG = MAX_ERREUR_PWM;
+	else if (erreurG < -MAX_ERREUR_PWM)
+	    erreurG = -MAX_ERREUR_PWM;
+
+	if (erreurD > MAX_ERREUR_PWM)
+	    erreurD = MAX_ERREUR_PWM;
+	else if (erreurD < -MAX_ERREUR_PWM)
+	    erreurD = -MAX_ERREUR_PWM;
 
 	int ordrePWMG = motor.getLeftCurrentPWM() + erreurG;
 	int ordrePWMD = motor.getRightCurrentPWM() + erreurD;
@@ -108,23 +112,47 @@ void ModelecOdometrySetup(void **out_pid, void **out_pidG, void **out_pidD) {
 	//motor.accelerer(300);
 
 	*out_pid = new PidPosition(
-	    0.6,   // kp — réduit pour adoucir la réaction
-	    0.0,   // ki — on évite encore pour l’instant
-	    0.03,  // kd — un peu de dérivée pour stabiliser
+		0.8,   // kp — un poil plus agressif, il pousse plus vers la cible
+	    0.0,   // ki — toujours off pour éviter du dépassement imprévu
+	    0.015, // kd — un peu moins de freinage anticipé
 
-	    0.4,   // kpTheta — moins agressif sur la rotation
+	    0.5,   // kpTheta — peut rester soft pour éviter les oscillations d’orientation
 	    0.0,   // kiTheta
-	    0.2,   // kdTheta — diminue les surcorrections d'angle
+	    0.15,  // kdTheta — un peu moins de frein sur la rotation
 	    Point()
 	);
 
 	//*out_pid = new PidPosition(1.2,0.02,0.8,0, 0, 0, Point());
-    *out_pidG = new PidVitesse(0.2, 0.05, 0.01, 0);
-    *out_pidD = new PidVitesse(0.2, 0.05, 0.01, 0);
+	*out_pidG = new PidVitesse(0.2, 0.0, 0.01, 0);
+	*out_pidD = new PidVitesse(0.2, 0.0, 0.01, 0);
 
 	return;
 
 }
+
+void stopMotorsStep() {
+    const uint16_t step = 200;
+
+    // TIM8
+    if (TIM8->CCR1 > 0) {
+        TIM8->CCR2 = 0;  // sécurité : un seul sens actif
+        TIM8->CCR1 = (TIM8->CCR1 > step) ? TIM8->CCR1 - step : 0;
+    } else if (TIM8->CCR2 > 0) {
+        TIM8->CCR1 = 0;
+        TIM8->CCR2 = (TIM8->CCR2 > step) ? TIM8->CCR2 - step : 0;
+    }
+
+    // TIM1
+    if (TIM1->CCR1 > 0) {
+        TIM1->CCR2 = 0;
+        TIM1->CCR1 = (TIM1->CCR1 > step) ? TIM1->CCR1 - step : 0;
+    } else if (TIM1->CCR2 > 0) {
+        TIM1->CCR1 = 0;
+        TIM1->CCR2 = (TIM1->CCR2 > step) ? TIM1->CCR2 - step : 0;
+    }
+}
+
+
 
 void ModelecOdometryUpdate() {
 	//On récupère la valeur des compteurs
@@ -158,9 +186,9 @@ void ModelecOdometryUpdate() {
 	if (theta < 0)
 		theta += 2.0f * M_PI;
 
-	char msg[128];
-	sprintf(msg, " Update current position : X: %.3f m, Y: %.3f m, Theta: %.3f rad\r\n", x, y, theta);
-	CDC_Transmit_FS((uint8_t*) msg, strlen(msg));
+	//char msg[128];
+	//sprintf(msg, " Update current position : X: %.3f m, Y: %.3f m, Theta: %.3f rad\r\n", x, y, theta);
+	//CDC_Transmit_FS((uint8_t*) msg, strlen(msg));
 	float dt = 0.01f; // 10 ms
 
 	// Calcul des vitesses des roues
@@ -172,8 +200,8 @@ void ModelecOdometryUpdate() {
 	vitesseAngulaire = (vitesseRight - vitesseLeft) / WHEEL_BASE;
 
 	// Affichage pour debug
-	sprintf(msg, "Vitesse G: %.3f m/s | D: %.3f m/s | Lin: %.3f m/s | Ang: %.3f rad/s\r\n",
-	        vitesseLeft, vitesseRight, vitesseLineaire, vitesseAngulaire);
+	//sprintf(msg, "Vitesse G: %.3f m/s | D: %.3f m/s | Lin: %.3f m/s | Ang: %.3f rad/s\r\n",
+	 //       vitesseLeft, vitesseRight, vitesseLineaire, vitesseAngulaire);
 	//CDC_Transmit_FS((uint8_t*) msg, strlen(msg));
 
 	//motor.setLeftCurrentSpeed(vitesseLeft);
@@ -194,6 +222,7 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD, int* cnt) {
 	PidPosition* pidPosition = static_cast<PidPosition*>(pid);
 	PidVitesse* pidVitesseG = static_cast<PidVitesse*>(pidG);
 	PidVitesse* pidVitesseD = static_cast<PidVitesse*>(pidD);
+	USB_Comm_Process();
 
 	//receiveControlParams();
 	//GPIOC->ODR ^= (1 << 10);
@@ -201,24 +230,33 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD, int* cnt) {
 	//On met à jour toutes les 10ms
 	if (isDelayPassed(10)) {
 		ModelecOdometryUpdate();
-		//USB_Comm_Process();
+		USB_Comm_Process();
 
 		//HAL_Delay(1000);
 		currentPoint.setX(x);
 		currentPoint.setY(y);
 		currentPoint.setTheta(theta);
 		//Point currentPoint(x, y,theta, StatePoint::INTERMEDIAIRE);
-		Point targetPoint(0.50, 0.0,0, StatePoint::FINAL);
-		char debugMsg[128];
-		sprintf(debugMsg, "Speed avant determination : L=%.3f | R=%.3f\r\n",
-		motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed());
-		CDC_Transmit_FS((uint8_t*)debugMsg, strlen(debugMsg));
+
+		if(odo_active == 1){
 
 
-		determinationCoefPosition(targetPoint, currentPoint, *pidPosition, *pidVitesseG, *pidVitesseD, motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed(), *cnt);
-		//HAL_Delay(1000);
-		motor.update();
-		(*cnt)++;
+			//char debugMsg[128];
+			//sprintf(debugMsg, "Speed avant determination : L=%.3f | R=%.3f\r\n",
+			//motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed());
+			//CDC_Transmit_FS((uint8_t*)debugMsg, strlen(debugMsg));
+
+
+			determinationCoefPosition(targetPoint, currentPoint, *pidPosition, *pidVitesseG, *pidVitesseD, motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed(), *cnt);
+			//HAL_Delay(1000);
+			motor.update();
+
+
+		}else{
+			stopMotorsStep();
+		}
+
+		//(*cnt)++;
 
 
 
@@ -228,4 +266,6 @@ void ModelecOdometryLoop(void* pid, void* pidG, void* pidD, int* cnt) {
 	publishStatus();
 }
 
+#ifdef __cplusplus
 } //extern C end
+#endif

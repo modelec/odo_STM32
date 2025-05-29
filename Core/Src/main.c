@@ -21,7 +21,7 @@
 #include "tim.h"
 #include "usb_device.h"
 #include "gpio.h"
-#include "modelec.h"
+//#include "modelec.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -119,7 +119,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_Delay(5000);  // Attends 5 secondes après le boot
+  //HAL_Delay(5000);  // Attends 5 secondes après le boot
   char test[] = "Hello from STM32\r\n";
   CDC_Transmit_FS((uint8_t*)test, strlen(test));
   while (1)

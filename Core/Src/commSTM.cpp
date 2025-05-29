@@ -5,12 +5,12 @@
  *      Author: maxch
  */
 
+#include <CommCallbacks.h>
 #include "commSTM.h"
 #include "usbd_cdc.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "CommCallbacks.hpp"
 
 // ⚠️ fourni par CubeMX dans usb_device.c
 extern USBD_HandleTypeDef hUsbDeviceFS;
@@ -125,9 +125,15 @@ void USB_Comm_Process(void) {
             USB_Comm_Send("OK;WAYPOINT\n");
         }
         else if (strcmp(token, "START") == 0) {
-            int val = atoi(strtok(NULL, ";"));
-            Comm_StartOdometry(val != 0);
-            USB_Comm_Send("OK;START\n");
+        	int val = atoi(strtok(NULL, ";"));
+        	Comm_StartOdometry(val != 0);
+
+        	USB_Comm_Send("OK;START\n");
+
+        	// facultatif, si tu veux logguer aussi en debug
+        	char debugMsg[128];
+        	sprintf(debugMsg, "changement etat : %d\n", val);
+        	CDC_Transmit_FS((uint8_t*)debugMsg, strlen(debugMsg));
         }
         else {
             USB_Comm_Send("KO;UNKNOWN\n");

@@ -2,7 +2,10 @@
 #include "pidPosition.h"
 #include <cstdio>
 #include "usbd_cdc_if.h"
+#include "modelec.h"
 #include "commSTM.h"
+
+bool arrive = false;
 PidPosition::PidPosition(float kp, float ki, float kd,float Kp_theta, float Ki_theta, float Kd_theta, Point consignePosition): Pid(kp, ki, kd){
 
 	this->Kp_theta = Kp_theta;
@@ -116,13 +119,13 @@ std::array<double, 2> PidPosition::updateNouvelOrdreVitesse(Point pointActuel, f
     this->updateErreurPosition(pointActuel);
 
     // Affichage position actuelle vs consigne
-    sprintf(log, "[DEBUG] Position Actuelle | X: %.3f | Consigne X: %.3f\r\n", pointActuel.getX(), consignePositionFinale.getX());
+    /*sprintf(log, "[DEBUG] Position Actuelle | X: %.3f | Consigne X: %.3f\r\n", pointActuel.getX(), consignePositionFinale.getX());
     CDC_Transmit_FS((uint8_t*)log, strlen(log));
 
     // Affichage erreur
     sprintf(log, "[PID] Erreur Position | X: %.3f | Y: %.3f | Theta: %.3f\r\n",
             erreurPosition.getX(), erreurPosition.getY(), erreurPosition.getTheta());
-    CDC_Transmit_FS((uint8_t*)log, strlen(log));
+    CDC_Transmit_FS((uint8_t*)log, strlen(log));*/
 
     // Passage repère global -> repère robot
     double errX = erreurPosition.getX();
@@ -137,8 +140,8 @@ std::array<double, 2> PidPosition::updateNouvelOrdreVitesse(Point pointActuel, f
     float i2 = this->i[1] + erreurLat;
     float i3 = this->i[2] + this->erreurPosition.getTheta();
 
-    sprintf(log, "[PID] Terme Intégral | iAvant: %.3f | iLat: %.3f | iTheta: %.3f\r\n", i1, i2, i3);
-    CDC_Transmit_FS((uint8_t*)log, strlen(log));
+    /*sprintf(log, "[PID] Terme Intégral | iAvant: %.3f | iLat: %.3f | iTheta: %.3f\r\n", i1, i2, i3);
+    CDC_Transmit_FS((uint8_t*)log, strlen(log));*/
 
     // Terme dérivé
     double errX_old = erreurPosition_old.getX();
@@ -151,8 +154,8 @@ std::array<double, 2> PidPosition::updateNouvelOrdreVitesse(Point pointActuel, f
     double d2 = erreurLat - erreurLat_old;
     double d3 = erreurPosition.getTheta() - erreurPosition_old.getTheta();
 
-    sprintf(log, "[PID] Terme Dérivé | dAvant: %.3f | dLat: %.3f | dTheta: %.3f\r\n", d1, d2, d3);
-    CDC_Transmit_FS((uint8_t*)log, strlen(log));
+    /*sprintf(log, "[PID] Terme Dérivé | dAvant: %.3f | dLat: %.3f | dTheta: %.3f\r\n", d1, d2, d3);
+    CDC_Transmit_FS((uint8_t*)log, strlen(log));*/
 
     double erreurTheta = erreurPosition.getTheta();
     constexpr double seuilTheta = 0.05;  // rad ≈ 2.8°
@@ -166,15 +169,15 @@ std::array<double, 2> PidPosition::updateNouvelOrdreVitesse(Point pointActuel, f
     double commandeAvant = kp * erreurAvant + ki * i1 + kd * d1;
     double commandeTheta = Kp_theta * erreurPosition.getTheta() + Ki_theta * i3 + Kd_theta * d3;
 
-    sprintf(log, "[PID] Commandes PID | Avant: %.3f | Theta: %.3f\r\n", commandeAvant, commandeTheta);
-    CDC_Transmit_FS((uint8_t*)log, strlen(log));
+    /*sprintf(log, "[PID] Commandes PID | Avant: %.3f | Theta: %.3f\r\n", commandeAvant, commandeTheta);
+    CDC_Transmit_FS((uint8_t*)log, strlen(log));*/
 
     // Conversion en vitesse
     double vitesseLineaire = commandeAvant;
     double vitesseAngulaire = commandeTheta;
 
-    sprintf(log, "[PID] Vitesses Avant Saturation | Linéaire: %.3f | Angulaire: %.3f\r\n", vitesseLineaire, vitesseAngulaire);
-    CDC_Transmit_FS((uint8_t*)log, strlen(log));
+    /*sprintf(log, "[PID] Vitesses Avant Saturation | Linéaire: %.3f | Angulaire: %.3f\r\n", vitesseLineaire, vitesseAngulaire);
+    CDC_Transmit_FS((uint8_t*)log, strlen(log));*/
 
     // Conversion en vitesse des roues
     double vitesseGauche = vitesseLineaire - (this->L / 2) * vitesseAngulaire;
@@ -193,17 +196,25 @@ std::array<double, 2> PidPosition::updateNouvelOrdreVitesse(Point pointActuel, f
     vitesseGauche = std::max(-0.235, std::min(0.235, vitesseGauche));
     vitesseDroite = std::max(-0.235, std::min(0.235, vitesseDroite));
 
-    sprintf(log, "[SET] VITESSE SORTIE DE PID POS | G: %.3f m/s | D: %.3f m/s\r\n", vitesseGauche, vitesseDroite);
-    CDC_Transmit_FS((uint8_t*)log, strlen(log));
+    /*sprintf(log, "[SET] VITESSE SORTIE DE PID POS | G: %.3f m/s | D: %.3f m/s\r\n", vitesseGauche, vitesseDroite);
+    CDC_Transmit_FS((uint8_t*)log, strlen(log));*/
 
-    if (fabs(erreurAvant) < 0.1 && fabs(erreurLat) < 0.1 && fabs(erreurPosition.getTheta()) < 2) {
-        sprintf(log, "[PID] OBJECTIF ATTEINT — Robot à l'arrêt\r\n");
-        CDC_Transmit_FS((uint8_t*)log, strlen(log));
-        return {0.0, 0.0};
+    if (fabs(erreurAvant) < 0.007 && fabs(erreurLat) < 0.007 && fabs(erreurPosition.getTheta()) < 0.5) {
+    	if(!arrive){
+    		sprintf(log, "SET;WAYPOINT;0\n");
+    		CDC_Transmit_FS((uint8_t*)log, strlen(log));
+    		arrive = true;
+    	}
+    	//CDC_Transmit_FS((uint8_t*)log, strlen(log));
+        //return {0.0, 0.0};
     }
 
     return {vitesseGauche, vitesseDroite};
 }
+
+
+
+
 
 
 

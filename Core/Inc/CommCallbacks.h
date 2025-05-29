@@ -1,6 +1,8 @@
 #ifndef COMM_CALLBACKS_HPP
 #define COMM_CALLBACKS_HPP
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

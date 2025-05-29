@@ -21,6 +21,7 @@
 #include "pid.h"
 #include "point.h"
 #include "pidPosition.h"
+#include "CommCallbacks.h"
 #include "usbd_cdc_if.h"
 #include "commSTM.h"
 
@@ -49,10 +50,21 @@ void determinationCoefPosition(
 // Fonctions utilitaires (optionnellement utilisables ailleurs)
 bool isDelayPassedFrom(uint32_t delay, uint32_t *lastTick);
 bool isDelayPassed(uint32_t delay);
+void stopMotorsStep();
+extern Point targetPoint;
+
+
+//variables :
+extern Point currentPoint;
+extern float vitesseLineaire;
+extern float vitesseAngulaire;
+extern float vitesseLeft;
+extern float vitesseRight;
+extern bool odo_active;
+extern bool arrive;
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif // MODELEC_H
-

@@ -13,11 +13,18 @@
 #include <stddef.h>
 #include "usbd_cdc_if.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // À appeler régulièrement pour parser ce qui a été reçu
 void USB_Comm_Process(void);
 
 // À appeler dans CDC_Receive_FS (depuis usbd_cdc_if.c)
 void USB_Comm_OnReceive(uint8_t* Buf, uint32_t Len);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* INC_COMMSTM_H_ */
