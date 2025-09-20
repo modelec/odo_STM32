@@ -1,117 +1,14 @@
 
 #include "modelec.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern TIM_HandleTypeDef htim3;
-extern TIM_HandleTypeDef htim2;
-//extern TIM_HandleTypeDef htim21;
-//extern UART_HandleTypeDef huart2;
-
 // Variables globales
 // Constants
-#define COUNTS_PER_REV    2400.0f    // 600 PPR × 4
-#define WHEEL_DIAMETER    0.081f       // meters
-#define WHEEL_BASE        0.287f       // meters
-#define WHEEL_CIRCUMFERENCE (M_PI * WHEEL_DIAMETER)
+// #define COUNTS_PER_REV    2400.0f    // 600 PPR × 4
+// #define WHEEL_DIAMETER    0.081f       // meters
+// #define WHEEL_BASE        0.287f       // meters
+// #define WHEEL_CIRCUMFERENCE (M_PI * WHEEL_DIAMETER)
 
-// Contrôle des moteurs
-Motor motor(TIM2);
-
-// Données odométriques
-uint16_t lastPosRight, lastPosLeft;
-// x et y sont en mètres
-float x, y, theta;
-
-Point currentPoint(0.0, 0.0,0, StatePoint::INTERMEDIAIRE);
-Point targetPoint(0.5,0.0, 0, StatePoint::INTERMEDIAIRE);
-
-
-float vitesseLineaire;
-float vitesseAngulaire;
-float vitesseLeft;
-float vitesseRight;
-bool odo_active = 0;
-
-uint32_t lastTick = 0;
-
-bool isDelayPassedFrom(uint32_t delay, uint32_t *lastTick) {
-	if (HAL_GetTick() - *lastTick >= delay) {
-		*lastTick = HAL_GetTick();
-		return true;
-	}
-	return false;
-}
-bool isDelayPassed(uint32_t delay) {
-	return isDelayPassedFrom(delay, &lastTick);
-}
-
-//PID
-void determinationCoefPosition(Point objectifPoint, Point pointActuel, PidPosition& pid, PidVitesse& pidG, PidVitesse& pidD, float vitGauche, float vitDroit, int cnt){
-	//PidPosition pid(0,0,0,0,0,0,objectifPoint);
-
-
-	pid.setConsignePositionFinale(objectifPoint);
-	std::array<double, 2> vitesse = pid.updateNouvelOrdreVitesse(pointActuel, vitGauche, vitDroit);
-	//std::array<double, 2> vitesse = {0, 0};
-
-	/*char debug_msg[128];
-	sprintf(debug_msg, "[CONS] G: %.3f m/s | D: %.3f m/s\r\n", vitesse[0], vitesse[1]);
-	CDC_Transmit_FS((uint8_t*)debug_msg, strlen(debug_msg));*/
-
-	pidG.setConsigneVitesseFinale(vitesse[0]);
-	pidD.setConsigneVitesseFinale(vitesse[1]);
-
-
-	pidG.updateNouvelleVitesse(motor.getLeftCurrentSpeed());
-	pidD.updateNouvelleVitesse(motor.getRightCurrentSpeed());
-
-
-
-	float nouvelOrdreG = pidG.getNouvelleConsigneVitesse();
-	float nouvelOrdreD = pidD.getNouvelleConsigneVitesse();
-
-	/*sprintf(debug_msg, "[CORR] G: %.3f m/s | D: %.3f m/s\r\n", nouvelOrdreG, nouvelOrdreD);
-	CDC_Transmit_FS((uint8_t*)debug_msg, strlen(debug_msg));*/
-
-	int erreurG = pidG.getPWMCommand(nouvelOrdreG);
-	int erreurD = pidD.getPWMCommand(nouvelOrdreD);
-
-
-	const int MAX_ERREUR_PWM = 50;
-
-	if (erreurG > MAX_ERREUR_PWM)
-	    erreurG = MAX_ERREUR_PWM;
-	else if (erreurG < -MAX_ERREUR_PWM)
-	    erreurG = -MAX_ERREUR_PWM;
-
-	if (erreurD > MAX_ERREUR_PWM)
-	    erreurD = MAX_ERREUR_PWM;
-	else if (erreurD < -MAX_ERREUR_PWM)
-	    erreurD = -MAX_ERREUR_PWM;
-
-	int ordrePWMG = motor.getLeftCurrentPWM() + erreurG;
-	int ordrePWMD = motor.getRightCurrentPWM() + erreurD;
-
-	motor.setLeftTargetPWM(ordrePWMG);
-	motor.setRightTargetPWM(ordrePWMD);
-
-
-}
-//Odométrie
-
-void ModelecOdometrySetup(void **out_pid, void **out_pidG, void **out_pidD) {
-	CDC_Transmit_FS((uint8_t*)"SETUP COMPLETE\n", strlen("SETUP COMPLETE\n"));
-	lastPosRight = __HAL_TIM_GET_COUNTER(&htim2);
-	lastPosLeft = __HAL_TIM_GET_COUNTER(&htim3);
-	x = 0.0f;
-	y = 0.0f;
-	theta = 0.0f;
-	//motor.accelerer(300);
-
-	*out_pid = new PidPosition(
+	/**out_pid = new PidPosition(
 		0.8,   // kp — un poil plus agressif, il pousse plus vers la cible
 	    0.0,   // ki — toujours off pour éviter du dépassement imprévu
 	    0.015, // kd — un peu moins de freinage anticipé
@@ -119,153 +16,137 @@ void ModelecOdometrySetup(void **out_pid, void **out_pidG, void **out_pidD) {
 	    0.5,   // kpTheta — peut rester soft pour éviter les oscillations d’orientation
 	    0.0,   // kiTheta
 	    0.15,  // kdTheta — un peu moins de frein sur la rotation
+		2,
 	    Point()
-	);
+	);*/
 
-	//*out_pid = new PidPosition(1.2,0.02,0.8,0, 0, 0, Point());
-	*out_pidG = new PidVitesse(0.2, 0.0, 0.01, 0);
-	*out_pidD = new PidVitesse(0.2, 0.0, 0.01, 0);
+	// *out_pidG = new PidVitesse(0.2, 0.0, 0.01, 0);
+	// *out_pidD = new PidVitesse(0.2, 0.0, 0.01, 0);
 
-	return;
 
+float DiffBot::readEncoderLeft() {
+	int32_t count = __HAL_TIM_GET_COUNTER(&htim3);
+	int32_t diff = count - prevCountRight;
+	prevCountRight = count;
+	float revs = static_cast<float>(diff) / ENCODER_RES;
+	return (2*M_PI*WHEEL_RADIUS*revs); // m
 }
 
-void stopMotorsStep() {
-    const uint16_t step = 200;
+float DiffBot::readEncoderRight() {
+    int32_t count = __HAL_TIM_GET_COUNTER(&htim2);
+    int32_t diff = count - prevCountLeft;
+    prevCountLeft = count;
+    float revs = static_cast<float>(diff) / ENCODER_RES;
+    return (2*M_PI*WHEEL_RADIUS*revs); // m
+}
 
-    // TIM8
-    if (TIM8->CCR1 > 0) {
-        TIM8->CCR2 = 0;  // sécurité : un seul sens actif
-        TIM8->CCR1 = (TIM8->CCR1 > step) ? TIM8->CCR1 - step : 0;
-    } else if (TIM8->CCR2 > 0) {
-        TIM8->CCR1 = 0;
-        TIM8->CCR2 = (TIM8->CCR2 > step) ? TIM8->CCR2 - step : 0;
+void DiffBot::setup() {
+	pidLeft = PID(0.2, 0.0, 0.01, -PWM_MAX, PWM_MAX);
+	pidRight = PID(0.2, 0.0, 0.01, -PWM_MAX, PWM_MAX);
+	pidPos = PID(0.8, 0.0, 0.01, -2, 2);
+	pidTheta = PID(0.5, 0.0, 0.01, -M_PI_2, M_PI_2);
+}
+
+void DiffBot::setTarget(Point new_target) {
+	target = new_target;
+}
+
+void DiffBot::stop(bool stop) {
+	odo_active = !stop;
+	motor.stop(stop);
+}
+
+void DiffBot::update(float dt) {
+	// read encoder
+    float leftVel  = readEncoderLeft();
+    float rightVel = readEncoderRight();
+
+    // update pos
+    float v = (rightVel + leftVel) / 2.0f;
+    float w = (rightVel - leftVel) / WHEEL_BASE;
+    pose.x     += v * cosf(pose.theta);
+    pose.y     += v * sinf(pose.theta);
+    pose.theta += w;
+
+    // pid setup
+    float dx = targets[index].x - pose.x;
+    float dy = targets[index].y - pose.y;
+    float distError = sqrtf(dx*dx + dy*dy);
+    float angleTarget = atan2f(dy, dx);
+    float angleError  = angleTarget - pose.theta;
+
+    while (angleError >  M_PI) angleError -= 2*M_PI;
+    while (angleError < -M_PI) angleError += 2*M_PI;
+
+
+    /* CHECK IF ON POS THERE
+     * IF final target check if every things is on purpose like x, y, theta
+     * IF not final target check if x AND y are close and if so index++
+     */
+
+    switch (targets[index].getState()) {
+    case StatePoint::FINAL:
+
+    	if (fabs(dx) < 0.005 && fabs(dy) < 0.005 && fabs(angleError) < 0.08 /* 5deg */) {
+    		stop(true);
+
+    		char log[128];
+    		sprintf(log, "SET;WAYPOINT;%d\n", index);
+    		CDC_Transmit_FS((uint8_t*)log, strlen(log));
+    	}
+
+    	break;
+    case StatePoint::INTERMEDIAIRE:
+
+    	if (fabs(dx) < 0.05 && fabs(dy) < 0.05) {
+    		index++;
+
+    		dx = targets[index].x - pose.x;
+    		dy = targets[index].y - pose.y;
+    	    distError = sqrtf(dx*dx + dy*dy);
+    	    angleTarget = atan2f(dy, dx);
+    	    angleError  = angleTarget - pose.theta;
+
+    	    while (angleError >  M_PI) angleError -= 2*M_PI;
+    	    while (angleError < -M_PI) angleError += 2*M_PI;
+
+    		char log[128];
+    		sprintf(log, "SET;WAYPOINT;%d\n", index);
+    		CDC_Transmit_FS((uint8_t*)log, strlen(log));
+    	}
+
+    	break;
+    default:
+    	break;
     }
 
-    // TIM1
-    if (TIM1->CCR1 > 0) {
-        TIM1->CCR2 = 0;
-        TIM1->CCR1 = (TIM1->CCR1 > step) ? TIM1->CCR1 - step : 0;
-    } else if (TIM1->CCR2 > 0) {
-        TIM1->CCR1 = 0;
-        TIM1->CCR2 = (TIM1->CCR2 > step) ? TIM1->CCR2 - step : 0;
-    }
+    float vRef = pidPos.compute(0.0, -distError);
+    float wRef = pidTheta.compute(targets[index].theta, pose.theta) + 2.0f * angleError;
+
+    float vLeft  = vRef - (WHEEL_BASE_2) * wRef;
+    float vRight = vRef + (WHEEL_BASE_2) * wRef;
+
+    float pwmLeft  = pidLeft.compute(vLeft,  leftVel);
+    float pwmRight = pidRight.compute(vRight, rightVel);
+
+    motor.leftTarget_PWM  = static_cast<int16_t>(pwmLeft);
+    motor.rightTarget_PWM = static_cast<int16_t>(pwmRight);
+    motor.update();
 }
 
+DiffBot::DiffBot(Point pose, float dt) : pose(pose), dt(dt) {
 
+};
 
-void ModelecOdometryUpdate() {
-	//On récupère la valeur des compteurs
-	uint16_t posRight = __HAL_TIM_GET_COUNTER(&htim2);
-	uint16_t posLeft = __HAL_TIM_GET_COUNTER(&htim3);
+void DiffBot::addTarget(int id, int type, float x, float y, float theta) {
+	targets[id].setX(x);
+	targets[id].setY(y);
+	targets[id].setTheta(theta);
+	targets[id].setID(id);
+	targets[id].setState(type == 1 ? StatePoint::FINAL : StatePoint::INTERMEDIAIRE);
 
-	//On calcule les deltas
-	int16_t deltaLeft = (int16_t) (posLeft - lastPosLeft);
-	int16_t deltaRight = (int16_t) (posRight - lastPosRight);
+	// if (type == StatePoint::FINAL) index = 0;
+	index = 0;
 
-	//On met à jour la dernière position
-	lastPosLeft = posLeft;
-	lastPosRight = posRight;
-
-	//On convertit en distance (mètres)
-	float distLeft = (deltaLeft / COUNTS_PER_REV) * WHEEL_CIRCUMFERENCE;
-	float distRight = (deltaRight / COUNTS_PER_REV) * WHEEL_CIRCUMFERENCE;
-
-	//On calcule les déplacements
-	float linear = (distLeft + distRight) / 2.0f;
-	float deltaTheta = (distRight - distLeft) / WHEEL_BASE;
-
-	//On met à jour la position
-	float avgTheta = theta + deltaTheta / 2.0f;
-	x += linear * cosf(avgTheta);
-	y += linear * sinf(avgTheta);
-	theta += deltaTheta;
-
-	//On normalise theta
-	theta = fmodf(theta, 2.0f * M_PI);
-	if (theta < 0)
-		theta += 2.0f * M_PI;
-
-	//char msg[128];
-	//sprintf(msg, " Update current position : X: %.3f m, Y: %.3f m, Theta: %.3f rad\r\n", x, y, theta);
-	//CDC_Transmit_FS((uint8_t*) msg, strlen(msg));
-	float dt = 0.01f; // 10 ms
-
-	// Calcul des vitesses des roues
-	vitesseLeft = distLeft / dt;
-	vitesseRight = distRight / dt;
-
-	// Vitesse linéaire et angulaire du robot
-	vitesseLineaire = (vitesseLeft + vitesseRight) / 2.0f;
-	vitesseAngulaire = (vitesseRight - vitesseLeft) / WHEEL_BASE;
-
-	// Affichage pour debug
-	//sprintf(msg, "Vitesse G: %.3f m/s | D: %.3f m/s | Lin: %.3f m/s | Ang: %.3f rad/s\r\n",
-	 //       vitesseLeft, vitesseRight, vitesseLineaire, vitesseAngulaire);
-	//CDC_Transmit_FS((uint8_t*) msg, strlen(msg));
-
-	//motor.setLeftCurrentSpeed(vitesseLeft);
-	//motor.setRightCurrentSpeed(vitesseRight);
-	motor.setLeftCurrentSpeed(vitesseLeft);
-	motor.setRightCurrentSpeed(vitesseRight);
+    arrive = false;
 }
-
-void publishStatus(){
-
-}
-
-void receiveControlParams(){
-
-}
-
-void ModelecOdometryLoop(void* pid, void* pidG, void* pidD, int* cnt) {
-	PidPosition* pidPosition = static_cast<PidPosition*>(pid);
-	PidVitesse* pidVitesseG = static_cast<PidVitesse*>(pidG);
-	PidVitesse* pidVitesseD = static_cast<PidVitesse*>(pidD);
-	USB_Comm_Process();
-
-	//receiveControlParams();
-	//GPIOC->ODR ^= (1 << 10);
-
-	//On met à jour toutes les 10ms
-	if (isDelayPassed(10)) {
-		ModelecOdometryUpdate();
-		USB_Comm_Process();
-
-		//HAL_Delay(1000);
-		currentPoint.setX(x);
-		currentPoint.setY(y);
-		currentPoint.setTheta(theta);
-		//Point currentPoint(x, y,theta, StatePoint::INTERMEDIAIRE);
-
-		if(odo_active == 1){
-
-
-			//char debugMsg[128];
-			//sprintf(debugMsg, "Speed avant determination : L=%.3f | R=%.3f\r\n",
-			//motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed());
-			//CDC_Transmit_FS((uint8_t*)debugMsg, strlen(debugMsg));
-
-
-			determinationCoefPosition(targetPoint, currentPoint, *pidPosition, *pidVitesseG, *pidVitesseD, motor.getLeftCurrentSpeed(), motor.getRightCurrentSpeed(), *cnt);
-			//HAL_Delay(1000);
-			motor.update();
-
-
-		}else{
-			stopMotorsStep();
-		}
-
-		//(*cnt)++;
-
-
-
-
-	}
-
-	publishStatus();
-}
-
-#ifdef __cplusplus
-} //extern C end
-#endif

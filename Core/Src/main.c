@@ -35,10 +35,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-void ModelecOdometrySetup(void **out_pid, void **out_pidG, void **out_pidD);
-
-//void ModelecOdometryLoop(void* pid, void* pidG, void* pidD);
-
+void ModelecOdometrySetup();
+void ModelecOdometryLoop(float dt);
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,9 +47,6 @@ void ModelecOdometrySetup(void **out_pid, void **out_pidG, void **out_pidD);
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-int counter1=0;
-int counter2=0;
-int cnt=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -109,24 +104,21 @@ int main(void)
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 
-  void *pid;
-  void *pidG;
-  void *pidD;
-  ModelecOdometrySetup(&pid, &pidG, &pidD);
-
+  ModelecOdometrySetup();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  //HAL_Delay(5000);  // Attends 5 secondes après le boot
-  char test[] = "Hello from STM32\r\n";
-  CDC_Transmit_FS((uint8_t*)test, strlen(test));
+
   while (1)
   {
-	  counter2 = __HAL_TIM_GET_COUNTER(&htim2);
-	  counter1 = __HAL_TIM_GET_COUNTER(&htim3);
-	  ModelecOdometryLoop(pid, pidG, pidD, &cnt);
+
+	  float delay = 0.01f;
+
+	  ModelecOdometryLoop(delay);
+
+	  HAL_Delay(delay * 1000);
 
     /* USER CODE END WHILE */
 

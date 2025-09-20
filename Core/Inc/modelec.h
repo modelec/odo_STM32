@@ -2,25 +2,21 @@
  * modelec.h
  *
  *  Created on: May 25, 2025
- *      Author: maxch
+ *      Author: Modelec
  */
 
 #ifndef MODELEC_H
 #define MODELEC_H
 #include "motors.h"
 #include "main.h"
-//#include "stm32l0xx_hal.h"
 #include "stm32g4xx_hal.h"
-//#include "stm32g4xx_hal_uart.h"
 
 #include <cstdio>
 #include <cstring>
 #include <math.h>
 #include <algorithm>
-#include "pidVitesse.h"
 #include "pid.h"
 #include "point.h"
-#include "pidPosition.h"
 #include "CommCallbacks.h"
 #include "usbd_cdc_if.h"
 #include "commSTM.h"
@@ -29,39 +25,52 @@
 extern "C" {
 #endif
 
-// Prototypes des fonctions accessibles depuis main.cpp ou ailleurs
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim2;
 
-void ModelecOdometrySetup(void **out_pid, void **out_pidG, void **out_pidD);
-//void ModelecOdometryLoop(void* pid, void* pidG, void* pidD);
-void ModelecOdometryLoop(void* pid, void* pidG, void* pidD, int* cnt);
-void ModelecOdometryUpdate();
+class DiffBot {
+public:
+	Point target;
+	Point targets[10];
+	uint8_t index = 0;
+	Point pose;
 
-void determinationCoefPosition(
-    Point objectifPoint,
-    Point pointActuel,
-    PidPosition& pid,
-    PidVitesse& pidG,
-    PidVitesse& pidD,
-    float vitGauche,
-    float vitDroit,
-    int cnt
-);
+    Motor motor;
 
-// Fonctions utilitaires (optionnellement utilisables ailleurs)
-bool isDelayPassedFrom(uint32_t delay, uint32_t *lastTick);
-bool isDelayPassed(uint32_t delay);
-void stopMotorsStep();
-extern Point targetPoint;
+    float dt;
 
+    PID pidLeft, pidRight;
+    PID pidPos, pidTheta;
 
-//variables :
-extern Point currentPoint;
-extern float vitesseLineaire;
-extern float vitesseAngulaire;
-extern float vitesseLeft;
-extern float vitesseRight;
-extern bool odo_active;
-extern bool arrive;
+    int32_t prevCountLeft = 0;
+    int32_t prevCountRight = 0;
+
+	bool odo_active = false;
+	bool arrive = false;
+
+	int16_t PWM_MAX = 626;
+	float ENCODER_RES = 2048;
+	float WHEEL_RADIUS = 0.0405f;
+	float WHEEL_BASE = 0.287f;
+	float WHEEL_BASE_2 = 0.1435f;
+
+	float readEncoderRight();
+
+	float readEncoderLeft();
+
+	DiffBot(Point pose, float dt);
+
+	void stop(bool stop);
+
+	void setup();
+
+	void setTarget(Point new_target);
+
+    void update(float dt);
+
+    void addTarget(int id, int type, float x, float y, float theta);
+
+};
 
 #ifdef __cplusplus
 }

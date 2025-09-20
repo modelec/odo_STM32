@@ -19,13 +19,14 @@ typedef enum StatePoint {
 
 class Point {
 private:
-    float x;
-    float y;
-    float theta;
     uint32_t id;
     StatePoint state;
 
 public:
+    float x;
+    float y;
+    float theta;
+
     // Constructeur
     Point(float x = 0.0, float y = 0.0, float theta = 0.0, StatePoint state = StatePoint::INTERMEDIAIRE);
 
