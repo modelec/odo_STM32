@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-DiffBot bot(Point(0.0f,0.0f,0.0f), 0.01f);
+DiffBot bot(Point(), 0.01f);
 
 void ModelecOdometrySetup() {
 	bot.setup();

@@ -47,10 +47,6 @@ void DiffBot::setup() {
 	pidTheta = PID(0.5, 0.0, 0.01, -M_PI_2, M_PI_2);
 }
 
-void DiffBot::setTarget(Point new_target) {
-	target = new_target;
-}
-
 void DiffBot::stop(bool stop) {
 	odo_active = !stop;
 	motor.stop(stop);
@@ -78,7 +74,7 @@ void DiffBot::update(float dt) {
     while (angleError >  M_PI) angleError -= 2*M_PI;
     while (angleError < -M_PI) angleError += 2*M_PI;
 
-    switch (targets[index].getState()) {
+    switch (targets[index].state) {
     case StatePoint::FINAL:
 
     	if (fabs(dx) < 0.005 && fabs(dy) < 0.005 && fabs(angleError) < 0.08 /* 5deg */) {
@@ -135,13 +131,9 @@ DiffBot::DiffBot(Point pose, float dt) : pose(pose), dt(dt) {
 };
 
 void DiffBot::addTarget(int id, int type, float x, float y, float theta) {
-	targets[id].setX(x);
-	targets[id].setY(y);
-	targets[id].setTheta(theta);
-	targets[id].setID(id);
-	targets[id].setState(type == 1 ? StatePoint::FINAL : StatePoint::INTERMEDIAIRE);
 
-	// if (type == StatePoint::FINAL) index = 0;
+	targets[id] = Point(id, static_cast<StatePoint>(type), x, y, theta);
+
 	if (id <= index) index = 0;
 
     arrive = false;

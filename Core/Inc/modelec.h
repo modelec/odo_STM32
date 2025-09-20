@@ -30,10 +30,10 @@ extern TIM_HandleTypeDef htim2;
 
 class DiffBot {
 public:
-	Point target;
+	Point pose;
+
 	Point targets[10];
 	uint8_t index = 0;
-	Point pose;
 
     Motor motor;
 
@@ -63,8 +63,6 @@ public:
 	void stop(bool stop);
 
 	void setup();
-
-	void setTarget(Point new_target);
 
     void update(float dt);
 

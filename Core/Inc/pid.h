@@ -7,7 +7,8 @@
 
 #ifndef INC_PID_H_
 #define INC_PID_H_
-#include "point.h"
+
+#include <algorithm>
 
 class PID {
 protected:
