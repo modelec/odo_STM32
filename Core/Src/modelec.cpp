@@ -78,21 +78,17 @@ void DiffBot::update(float dt) {
     while (angleError >  M_PI) angleError -= 2*M_PI;
     while (angleError < -M_PI) angleError += 2*M_PI;
 
-
-    /* CHECK IF ON POS THERE
-     * IF final target check if every things is on purpose like x, y, theta
-     * IF not final target check if x AND y are close and if so index++
-     */
-
     switch (targets[index].getState()) {
     case StatePoint::FINAL:
 
     	if (fabs(dx) < 0.005 && fabs(dy) < 0.005 && fabs(angleError) < 0.08 /* 5deg */) {
     		stop(true);
 
-    		char log[128];
+    		char log[32];
     		sprintf(log, "SET;WAYPOINT;%d\n", index);
     		CDC_Transmit_FS((uint8_t*)log, strlen(log));
+
+    		return;
     	}
 
     	break;
@@ -110,7 +106,7 @@ void DiffBot::update(float dt) {
     	    while (angleError >  M_PI) angleError -= 2*M_PI;
     	    while (angleError < -M_PI) angleError += 2*M_PI;
 
-    		char log[128];
+    		char log[32];
     		sprintf(log, "SET;WAYPOINT;%d\n", index);
     		CDC_Transmit_FS((uint8_t*)log, strlen(log));
     	}
@@ -146,7 +142,7 @@ void DiffBot::addTarget(int id, int type, float x, float y, float theta) {
 	targets[id].setState(type == 1 ? StatePoint::FINAL : StatePoint::INTERMEDIAIRE);
 
 	// if (type == StatePoint::FINAL) index = 0;
-	index = 0;
+	if (id <= index) index = 0;
 
     arrive = false;
 }

@@ -116,12 +116,27 @@ void USB_Comm_Process(void) {
             USB_Comm_Send("OK;PID\n");
         }
         else if (strcmp(token, "WAYPOINT") == 0) {
-            int id = atoi(strtok(NULL, ";"));
-            int type = atoi(strtok(NULL, ";"));
-            float x = atof(strtok(NULL, ";"));
-            float y = atof(strtok(NULL, ";"));
-            float t = atof(strtok(NULL, ";"));
-            Comm_AddWaypoint(id, type, x, y, t);
+
+            while (true) {
+
+                char* idTok = strtok(nullptr, ";");
+                char* typeTok = strtok(nullptr, ";");
+                char* xTok = strtok(nullptr, ";");
+                char* yTok = strtok(nullptr, ";");
+                char* tTok = strtok(nullptr, ";");
+
+                if (!idTok || !typeTok || !xTok || !yTok || !tTok) {
+                    break;
+                }
+
+                int id = atoi(idTok);
+                int type = atoi(typeTok);
+                float x = atof(xTok);
+                float y = atof(yTok);
+                float theta = atof(tTok);
+
+                Comm_AddWaypoint(id, type, x, y, theta);
+            }
             USB_Comm_Send("OK;WAYPOINT\n");
         }
         else if (strcmp(token, "START") == 0) {
