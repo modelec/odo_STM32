@@ -21,7 +21,7 @@ protected:
 public:
     PID(float kp = 0.0f, float ki = 0.0f, float kd = 0.0f, float outMin = 0.0f, float outMax = 0.0f);
 
-    float compute(float setpoint, float measurement);
+    float compute(float setpoint, float measurement, float dt);
 };
 
 

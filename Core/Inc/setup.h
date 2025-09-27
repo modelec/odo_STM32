@@ -8,8 +8,6 @@
 #ifndef INC_SETUP_H_
 #define INC_SETUP_H_
 
-#include "modelec.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

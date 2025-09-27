@@ -13,7 +13,7 @@
 
 #include <cstdio>
 #include <cstring>
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 #include "pid.h"
 #include "point.h"
@@ -42,17 +42,31 @@ public:
     PID pidLeft, pidRight;
     PID pidPos, pidTheta;
 
-    int32_t prevCountLeft = 0;
-    int32_t prevCountRight = 0;
+    int16_t prevCountRight = 0, prevCountLeft = 0;
 
 	bool odo_active = false;
 	bool arrive = false;
 
 	int16_t PWM_MAX = 626;
-	float ENCODER_RES = 2048;
+	float ENCODER_RES = 2400.0f;
+	float WHEEL_DIAMETER = 0.081f;
 	float WHEEL_RADIUS = 0.0405f;
 	float WHEEL_BASE = 0.287f;
 	float WHEEL_BASE_2 = 0.1435f;
+
+	uint32_t lastTick = 0;
+
+	bool isDelayPassedFrom(uint32_t delay, uint32_t *lastTick) {
+		if (HAL_GetTick() - *lastTick >= delay) {
+			*lastTick = HAL_GetTick();
+			return true;
+		}
+		return false;
+	}
+
+	bool isDelayPassed(uint32_t delay) {
+		return isDelayPassedFrom(delay, &lastTick);
+	}
 
 	float readEncoderRight();
 

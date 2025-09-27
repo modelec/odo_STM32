@@ -67,21 +67,21 @@ void USB_Comm_Process(void) {
             float x, y, t;
             Comm_GetPosition(&x, &y, &t);
             char response[64];
-            snprintf(response, sizeof(response), "SET;POS;%.2f;%.2f;%.2f\n", x, y, t);
+            snprintf(response, sizeof(response), "SET;POS;%.4f;%.4f;%.4f\n", x, y, t);
             USB_Comm_Send(response);
         }
         else if (strcmp(token, "SPEED") == 0) {
             float vx, vy, omega;
             Comm_GetSpeed(&vx, &vy, &omega);
             char response[64];
-            snprintf(response, sizeof(response), "SET;SPEED;%.2f;%.2f;%.2f\n", vx, vy, omega);
+            snprintf(response, sizeof(response), "SET;SPEED;%.4f;%.4f;%.4f\n", vx, vy, omega);
             USB_Comm_Send(response);
         }
         else if (strcmp(token, "PID") == 0) {
             float p, i, d;
             Comm_GetPID(&p, &i, &d);
             char response[64];
-            snprintf(response, sizeof(response), "SET;PID;%.2f;%.2f;%.2f\n", p, i, d);
+            snprintf(response, sizeof(response), "SET;PID;%.4f;%.4f;%.4f\n", p, i, d);
             USB_Comm_Send(response);
         }
         else if (strcmp(token, "DIST") == 0) {
@@ -144,11 +144,6 @@ void USB_Comm_Process(void) {
         	Comm_StartOdometry(val != 0);
 
         	USB_Comm_Send("OK;START\n");
-
-        	// facultatif, si tu veux logguer aussi en debug
-        	char debugMsg[128];
-        	sprintf(debugMsg, "changement etat : %d\n", val);
-        	CDC_Transmit_FS((uint8_t*)debugMsg, strlen(debugMsg));
         }
         else {
             USB_Comm_Send("KO;UNKNOWN\n");

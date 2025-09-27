@@ -21,11 +21,10 @@
 #include "tim.h"
 #include "usb_device.h"
 #include "gpio.h"
-//#include "modelec.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "setup.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,8 +34,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-void ModelecOdometrySetup();
-void ModelecOdometryLoop(float dt);
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -114,11 +111,7 @@ int main(void)
   while (1)
   {
 
-	  float delay = 0.01f;
-
-	  ModelecOdometryLoop(delay);
-
-	  HAL_Delay(delay * 1000);
+	  ModelecOdometryLoop(0.01f);
 
     /* USER CODE END WHILE */
 
@@ -186,8 +179,7 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
