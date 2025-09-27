@@ -7,6 +7,7 @@
 
 #ifndef MODELEC_H
 #define MODELEC_H
+
 #include "motors.h"
 #include "main.h"
 #include "stm32g4xx_hal.h"
@@ -56,17 +57,9 @@ public:
 
 	uint32_t lastTick = 0;
 
-	bool isDelayPassedFrom(uint32_t delay, uint32_t *lastTick) {
-		if (HAL_GetTick() - *lastTick >= delay) {
-			*lastTick = HAL_GetTick();
-			return true;
-		}
-		return false;
-	}
+	static bool isDelayPassedFrom(uint32_t delay, uint32_t& lastTick);
 
-	bool isDelayPassed(uint32_t delay) {
-		return isDelayPassedFrom(delay, &lastTick);
-	}
+	bool isDelayPassed(uint32_t delay);
 
 	float readEncoderRight();
 

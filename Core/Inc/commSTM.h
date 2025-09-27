@@ -8,9 +8,6 @@
 #ifndef INC_COMMSTM_H_
 #define INC_COMMSTM_H_
 
-
-#include <stdint.h>
-#include <stddef.h>
 #include "usbd_cdc_if.h"
 
 #ifdef __cplusplus

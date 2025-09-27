@@ -15,22 +15,22 @@
 
 extern DiffBot bot;
 
-void Comm_GetPosition(float* x, float* y, float* theta) {
-	*x = bot.pose.x;
-	*y = bot.pose.y;
-	*theta = bot.pose.theta;
+void Comm_GetPos(float& x, float& y, float& theta) {
+	x = bot.pose.x;
+	y = bot.pose.y;
+	theta = bot.pose.theta;
 }
 
-void Comm_SetPosition(float x, float y, float theta) {
+void Comm_SetPos(float x, float y, float theta) {
 	bot.pose.x = x;
 	bot.pose.y = y;
 	bot.pose.theta = theta;
 }
 
-void Comm_GetSpeed(float* vx, float* vy, float* omega){
+void Comm_GetSpeed(float& vx, float& vy, float& omega){
 }
 
-void Comm_GetPID(float* p, float* i, float* d) {
+void Comm_GetPID(float& p, float& i, float& d) {
 }
 
 void Comm_SetPID(float p, float i, float d) {

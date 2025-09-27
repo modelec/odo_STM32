@@ -8,11 +8,8 @@
 #include <CommCallbacks.h>
 #include "commSTM.h"
 #include "usbd_cdc.h"
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 
-// ⚠️ fourni par CubeMX dans usb_device.c
+// fourni par CubeMX dans usb_device.c
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
 // Buffer de réception circulaire
@@ -65,21 +62,21 @@ void USB_Comm_Process(void) {
 
         if (strcmp(token, "POS") == 0) {
             float x, y, t;
-            Comm_GetPosition(&x, &y, &t);
+            Comm_GetPos(x, y, t);
             char response[64];
             snprintf(response, sizeof(response), "SET;POS;%.4f;%.4f;%.4f\n", x, y, t);
             USB_Comm_Send(response);
         }
         else if (strcmp(token, "SPEED") == 0) {
             float vx, vy, omega;
-            Comm_GetSpeed(&vx, &vy, &omega);
+            Comm_GetSpeed(vx, vy, omega);
             char response[64];
             snprintf(response, sizeof(response), "SET;SPEED;%.4f;%.4f;%.4f\n", vx, vy, omega);
             USB_Comm_Send(response);
         }
         else if (strcmp(token, "PID") == 0) {
             float p, i, d;
-            Comm_GetPID(&p, &i, &d);
+            Comm_GetPID(p, i, d);
             char response[64];
             snprintf(response, sizeof(response), "SET;PID;%.4f;%.4f;%.4f\n", p, i, d);
             USB_Comm_Send(response);
@@ -105,7 +102,7 @@ void USB_Comm_Process(void) {
             float x = atof(strtok(NULL, ";"));
             float y = atof(strtok(NULL, ";"));
             float t = atof(strtok(NULL, ";"));
-            Comm_SetPosition(x, y, t);
+            Comm_SetPos(x, y, t);
             USB_Comm_Send("OK;POS\n");
         }
         else if (strcmp(token, "PID") == 0) {

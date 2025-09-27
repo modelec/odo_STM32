@@ -23,6 +23,17 @@
 	// *out_pidG = new PidVitesse(0.2, 0.0, 0.01, 0);
 	// *out_pidD = new PidVitesse(0.2, 0.0, 0.01, 0);
 
+bool DiffBot::isDelayPassedFrom(uint32_t delay, uint32_t &lastTick) {
+	if (HAL_GetTick() - lastTick >= delay) {
+		lastTick = HAL_GetTick();
+		return true;
+	}
+	return false;
+}
+
+bool DiffBot::isDelayPassed(uint32_t delay) {
+	return isDelayPassedFrom(delay, lastTick);
+}
 
 float DiffBot::readEncoderLeft() {
 	int16_t count = __HAL_TIM_GET_COUNTER(&htim2);
@@ -39,6 +50,9 @@ float DiffBot::readEncoderRight() {
     float revs = static_cast<float>(diff) / ENCODER_RES;
     return (2.0f*M_PI*WHEEL_RADIUS*revs); // m
 }
+
+DiffBot::DiffBot(Point pose, float dt) : pose(pose), motor(), dt(dt) {
+};
 
 void DiffBot::setup() {
 	pidLeft = PID(1, 0.0, 0.0, -PWM_MAX, PWM_MAX);
@@ -59,14 +73,14 @@ void DiffBot::update(float dt) {
 	if (!isDelayPassed(dt*1000)) return;
 
 	// read encoder
-    float rightVel  = readEncoderRight();
+    float rightVel = readEncoderRight();
     float leftVel = readEncoderLeft();
 
     // update pos
     float v = (leftVel + rightVel) / 2.0f;
     float w = (rightVel - leftVel) / WHEEL_BASE;
-    pose.x     += v * cosf(pose.theta - w/2);
-    pose.y     += v * sinf(pose.theta - w/2);
+    pose.x += v * cosf(pose.theta - w/2);
+    pose.y += v * sinf(pose.theta - w/2);
     pose.theta += w;
 
     while (pose.theta >  M_PI) pose.theta -= 2*M_PI;
@@ -76,6 +90,7 @@ void DiffBot::update(float dt) {
     	motor.update();
     	return;
     }
+
     /*
      *
      *
@@ -96,9 +111,9 @@ void DiffBot::update(float dt) {
     float dist = sqrtf(dx*dx + dy*dy);
 
     float angleTarget = atan2f(dy, dx);
-    float angleError  = angleTarget - pose.theta;
+    float angleError = angleTarget - pose.theta;
 
-    while (angleError >  M_PI) angleError -= 2*M_PI;
+    while (angleError > M_PI) angleError -= 2*M_PI;
     while (angleError < -M_PI) angleError += 2*M_PI;
 
     float direction = 1.0f;
@@ -114,10 +129,9 @@ void DiffBot::update(float dt) {
     distError *= direction;
 
     switch (targets[index].state) {
-    case StatePoint::FINAL:
+    case FINAL:
 
     	if (fabs(dx) <= 0.01 && fabs(dy) <= 0.01 && fabs(targets[index].theta - pose.theta) < 0.01) {
-    		// maybe remove that so when stopped and you moved it, the robot compensates itself
     		targets[index].active = false;
     		motor.stop(true);
 
@@ -126,14 +140,16 @@ void DiffBot::update(float dt) {
     		CDC_Transmit_FS((uint8_t*)log, strlen(log));
 
     		return;
-    	} else if (targets[index].active == false) {
+    	}
+
+    	if (targets[index].active == false) {
     		targets[index].active = true;
     	}
 
     	break;
-    case StatePoint::INTERMEDIAIRE:
+    case INTERMEDIAIRE:
 
-    	if (fabs(dx) < 0.1 && fabs(dy) < 0.1) {
+    	if (std::fabs(dx) < 0.1 && std::fabs(dy) < 0.1) {
 
     		char log[32];
     		sprintf(log, "SET;WAYPOINT;%d\n", index);
@@ -147,6 +163,8 @@ void DiffBot::update(float dt) {
     			return;
     		}
 
+
+			// TODO when patch is done refactor this
     		dx = targets[index].x - pose.x;
     		dy = targets[index].y - pose.y;
     	    distError = sqrtf(dx*dx + dy*dy);
@@ -169,7 +187,7 @@ void DiffBot::update(float dt) {
     // float wRef = pidTheta.compute(targets[index].theta, pose.theta) /*+ 2.0f * angleError*/;
     float wRef;
 
-    if (targets[index].state == StatePoint::FINAL && fabs(dx) <= 0.01 && fabs(dy) <= 0.01) {
+    if (targets[index].state == FINAL && std::fabs(dx) <= 0.01 && std::fabs(dy) <= 0.01) {
         wRef = pidTheta.compute(targets[index].theta, pose.theta, dt);
         vRef = 0;
     }
@@ -192,9 +210,9 @@ void DiffBot::update(float dt) {
     float pwmRight = pwm_ff_right + pwm_corr_right;
 
     const float pwm_deadzone = 50.0f;
-    if (fabs(pwmLeft) > 0 && fabs(pwmLeft) < pwm_deadzone)
+    if (std::fabs(pwmLeft) > 0 && std::fabs(pwmLeft) < pwm_deadzone)
         pwmLeft = (pwmLeft > 0) ? pwm_deadzone : -pwm_deadzone;
-    if (fabs(pwmRight) > 0 && fabs(pwmRight) < pwm_deadzone)
+    if (std::fabs(pwmRight) > 0 && std::fabs(pwmRight) < pwm_deadzone)
         pwmRight = (pwmRight > 0) ? pwm_deadzone : -pwm_deadzone;
 
     // saturation
@@ -205,10 +223,6 @@ void DiffBot::update(float dt) {
     motor.rightTarget_PWM = static_cast<int16_t>(pwmRight);
     motor.update();
 }
-
-DiffBot::DiffBot(Point pose, float dt) : pose(pose), dt(dt) {
-
-};
 
 void DiffBot::addTarget(int id, int type, float x, float y, float theta) {
 
