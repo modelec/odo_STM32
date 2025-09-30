@@ -1,55 +1,43 @@
+#include <algorithm>
 #include <motors.h>
-#include <cstring>
-#include <cstdio>
-#include "usbd_cdc_if.h"
+#include <modelec.h>
+
+float approach(float current, float target, float step) {
+	if (current < target)
+		return std::min(current + step, target);
+
+	if (current > target)
+		return std::max(current - step, target);
+
+	return current;
+}
 
 void Motor::update() {
 
-	int16_t PWM_MAX_M = 626;
+    int16_t max_step = 50;
 
-    uint8_t max_step = 25;
+    leftTarget_PWM  = std::max(-PWM_MAX, std::min(leftTarget_PWM,  PWM_MAX));
+    rightTarget_PWM = std::max(-PWM_MAX, std::min(rightTarget_PWM, PWM_MAX));
 
-	if (leftTarget_PWM > PWM_MAX_M) leftTarget_PWM = PWM_MAX_M;
-	if (leftTarget_PWM < -PWM_MAX_M) leftTarget_PWM = -PWM_MAX_M;
-	if (rightTarget_PWM > PWM_MAX_M) rightTarget_PWM = PWM_MAX_M;
-	if (rightTarget_PWM < -PWM_MAX_M) rightTarget_PWM = -PWM_MAX_M;
+	leftCurrent_PWM  = approach(leftCurrent_PWM,  leftTarget_PWM,  max_step);
+	rightCurrent_PWM = approach(rightCurrent_PWM, rightTarget_PWM, max_step);
 
-    if (leftCurrent_PWM < leftTarget_PWM) {
-        leftCurrent_PWM += max_step;
-        if (leftCurrent_PWM > leftTarget_PWM)
-            leftCurrent_PWM = leftTarget_PWM;
-    } else if (leftCurrent_PWM > leftTarget_PWM) {
-        leftCurrent_PWM -= max_step;
-        if (leftCurrent_PWM < leftTarget_PWM)
-            leftCurrent_PWM = leftTarget_PWM;
-    }
-
-    if (rightCurrent_PWM < rightTarget_PWM) {
-        rightCurrent_PWM += max_step;
-        if (rightCurrent_PWM > rightTarget_PWM)
-            rightCurrent_PWM = rightTarget_PWM;
-    } else if (rightCurrent_PWM > rightTarget_PWM) {
-        rightCurrent_PWM -= max_step;
-        if (rightCurrent_PWM < rightTarget_PWM)
-            rightCurrent_PWM = rightTarget_PWM;
-    }
-
-	// moteur gauche -> TIM1 CH1/CH2
+	// left motor -> TIM1 CH1/CH2
 	if (leftCurrent_PWM >= 0) {
-		TIM8->CCR1 = static_cast<uint16_t>(leftCurrent_PWM);
-		TIM8->CCR2 = 0;
-	} else {
-		TIM8->CCR2 = static_cast<uint16_t>(-leftCurrent_PWM);
-		TIM8->CCR1 = 0;
-	}
-
-	// moteur droit -> TIM8 CH1/CH2
-	if (rightCurrent_PWM >= 0) {
-		TIM1->CCR1 = static_cast<uint16_t>(rightCurrent_PWM);
+		TIM1->CCR1 = static_cast<uint16_t>(leftCurrent_PWM);
 		TIM1->CCR2 = 0;
 	} else {
-		TIM1->CCR2 = static_cast<uint16_t>(-rightCurrent_PWM);
+		TIM1->CCR2 = static_cast<uint16_t>(-leftCurrent_PWM);
 		TIM1->CCR1 = 0;
+	}
+
+	// right motor -> TIM8 CH1/CH2
+	if (rightCurrent_PWM >= 0) {
+		TIM8->CCR1 = static_cast<uint16_t>(rightCurrent_PWM);
+		TIM8->CCR2 = 0;
+	} else {
+		TIM8->CCR2 = static_cast<uint16_t>(-rightCurrent_PWM);
+		TIM8->CCR1 = 0;
 	}
 }
 

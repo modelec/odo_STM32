@@ -8,7 +8,7 @@
 #ifndef INC_COMMSTM_H_
 #define INC_COMMSTM_H_
 
-#include "usbd_cdc_if.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

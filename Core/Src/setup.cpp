@@ -7,6 +7,7 @@
 
 #include <setup.h>
 #include <modelec.h>
+#include "commSTM.h"
 
 DiffBot bot(Point(), 0.01f);
 

@@ -8,23 +8,23 @@
 #ifndef MODELEC_H
 #define MODELEC_H
 
-#include "motors.h"
-#include "main.h"
 #include "stm32g4xx_hal.h"
+#include "usbd_cdc_if.h"
 
-#include <cstdio>
-#include <cstring>
-#include <cmath>
-#include <algorithm>
+#include "motors.h"
 #include "pid.h"
 #include "point.h"
-#include "CommCallbacks.h"
-#include "usbd_cdc_if.h"
-#include "commSTM.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define MAX_WAYPOINTS 16
+#define PWM_MAX 626.0f
+#define ENCODER_RES 2400.0f
+#define WHEEL_DIAMETER 0.081f
+#define WHEEL_RADIUS (WHEEL_DIAMETER/2.0f)
+#define WHEEL_BASE 0.287f
+#define WHEEL_BASE_2 (WHEEL_BASE/2.0f)
+#define PRECISE_ANGLE 0.017f // radians
+#define PRECISE_POS_FINAL 0.005f // meters
+#define PRECISE_POS 0.1f // meters
 
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim2;
@@ -33,10 +33,12 @@ class DiffBot {
 public:
 	Point pose;
 
-	Point targets[10];
+	Point targets[MAX_WAYPOINTS];
 	uint8_t index = 0;
 
     Motor motor;
+
+	float vx, vy, vtheta;
 
     float dt;
 
@@ -47,13 +49,6 @@ public:
 
 	bool odo_active = false;
 	bool arrive = false;
-
-	int16_t PWM_MAX = 626;
-	float ENCODER_RES = 2400.0f;
-	float WHEEL_DIAMETER = 0.081f;
-	float WHEEL_RADIUS = 0.0405f;
-	float WHEEL_BASE = 0.287f;
-	float WHEEL_BASE_2 = 0.1435f;
 
 	uint32_t lastTick = 0;
 
@@ -75,10 +70,7 @@ public:
 
     void addTarget(int id, int type, float x, float y, float theta);
 
+	void resetPID();
 };
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // MODELEC_H

@@ -30,10 +30,50 @@ void Comm_SetPos(float x, float y, float theta) {
 void Comm_GetSpeed(float& vx, float& vy, float& omega){
 }
 
-void Comm_GetPID(float& p, float& i, float& d) {
+bool Comm_GetPID(char *pid, float &p, float &i, float &d) {
+	if (strcmp(pid, "LEFT") == 0) {
+		p = bot.pidLeft.getKp();
+		i = bot.pidLeft.getKi();
+		d = bot.pidLeft.getKd();
+	}
+	else if (strcmp(pid, "RIGHT") == 0) {
+		p = bot.pidRight.getKp();
+		i = bot.pidRight.getKi();
+		d = bot.pidRight.getKd();
+	}
+	else if (strcmp(pid, "POS") == 0) {
+		p = bot.pidPos.getKp();
+		i = bot.pidPos.getKi();
+		d = bot.pidPos.getKd();
+	}
+	else if (strcmp(pid, "THETA") == 0) {
+		p = bot.pidTheta.getKp();
+		i = bot.pidTheta.getKi();
+		d = bot.pidTheta.getKd();
+	}
+	else {
+		return false;
+	}
+	return true;
 }
 
-void Comm_SetPID(float p, float i, float d) {
+bool Comm_SetPID(char *pid, float p, float i, float d) {
+	if (strcmp(pid, "LEFT") == 0) {
+		bot.pidLeft.setTunings(p, i, d);
+	}
+	else if (strcmp(pid, "RIGHT") == 0) {
+		bot.pidRight.setTunings(p, i, d);
+	}
+	else if (strcmp(pid, "POS") == 0) {
+		bot.pidPos.setTunings(p, i, d);
+	}
+	else if (strcmp(pid, "THETA") == 0) {
+		bot.pidTheta.setTunings(p, i, d);
+	}
+	else {
+		return false;
+	}
+	return true;
 }
 
 void Comm_StartOdometry(bool on) {
@@ -46,4 +86,9 @@ void Comm_AddWaypoint(int id, int type, float x, float y, float theta) {
 
 float Comm_GetDistance(int n) {
     return 0.0f;
+}
+
+void Comm_SetPWM(float left, float right) {
+	bot.motor.leftTarget_PWM = left;
+	bot.motor.rightTarget_PWM = right;
 }

@@ -24,7 +24,7 @@ public:
     float x;
     float y;
     float theta;
-    bool active = false;
+    bool active;
 
     Point(uint8_t id = 0, StatePoint state = StatePoint::INTERMEDIAIRE, float x = 0.0, float y = 0.0, float theta = 0.0, bool active = false);
 };

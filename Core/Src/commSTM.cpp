@@ -5,9 +5,11 @@
  *      Author: maxch
  */
 
-#include <CommCallbacks.h>
+#include "CommCallbacks.h"
 #include "commSTM.h"
-#include "usbd_cdc.h"
+
+#include "modelec.h"
+#include "usbd_cdc_if.h"
 
 // fourni par CubeMX dans usb_device.c
 extern USBD_HandleTypeDef hUsbDeviceFS;
@@ -75,11 +77,16 @@ void USB_Comm_Process(void) {
             USB_Comm_Send(response);
         }
         else if (strcmp(token, "PID") == 0) {
+            char* pid = strtok(NULL, ";");
             float p, i, d;
-            Comm_GetPID(p, i, d);
-            char response[64];
-            snprintf(response, sizeof(response), "SET;PID;%.4f;%.4f;%.4f\n", p, i, d);
-            USB_Comm_Send(response);
+            if (Comm_GetPID(pid, p, i, d)) {
+                char response[64];
+                snprintf(response, sizeof(response), "SET;PID;%.4f;%.4f;%.4f\n", p, i, d);
+                USB_Comm_Send(response);
+            }
+            else {
+                USB_Comm_Send("KO;PID;UNKNOWN\n");
+            }
         }
         else if (strcmp(token, "DIST") == 0) {
             token = strtok(NULL, ";");
@@ -106,11 +113,17 @@ void USB_Comm_Process(void) {
             USB_Comm_Send("OK;POS\n");
         }
         else if (strcmp(token, "PID") == 0) {
+            char* pid = strtok(NULL, ";");
             float p = atof(strtok(NULL, ";"));
             float i = atof(strtok(NULL, ";"));
             float d = atof(strtok(NULL, ";"));
-            Comm_SetPID(p, i, d);
-            USB_Comm_Send("OK;PID\n");
+
+            if (Comm_SetPID(pid, p, i, d)) {
+                USB_Comm_Send("OK;PID\n");
+            }
+            else {
+                USB_Comm_Send("KO;PID;UNKNOWN\n");
+            }
         }
         else if (strcmp(token, "WAYPOINT") == 0) {
 
@@ -141,6 +154,19 @@ void USB_Comm_Process(void) {
         	Comm_StartOdometry(val != 0);
 
         	USB_Comm_Send("OK;START\n");
+        }
+        else if (strcmp(token, "MOTOR") == 0) {
+            float left = atof(strtok(NULL, ";"));
+            float right = atof(strtok(NULL, ";"));
+
+            if (left < -PWM_MAX || left > PWM_MAX || right < -PWM_MAX || right > PWM_MAX) {
+                USB_Comm_Send("KO;MOTOR;RANGE\n");
+                return;
+            }
+
+            Comm_SetPWM(left, right);
+
+            USB_Comm_Send("OK;MOTOR\n");
         }
         else {
             USB_Comm_Send("KO;UNKNOWN\n");
