@@ -4,11 +4,6 @@
 #include <algorithm>
 #include <cmath>
 
-// #define COUNTS_PER_REV    2400.0f    // 600 PPR × 4
-// #define WHEEL_DIAMETER    0.081f       // meters
-// #define WHEEL_BASE        0.287f       // meters
-// #define WHEEL_CIRCUMFERENCE (M_PI * WHEEL_DIAMETER)
-
 bool DiffBot::isDelayPassedFrom(uint32_t delay, uint32_t &lastTick) {
 	if (HAL_GetTick() - lastTick >= delay) {
 		lastTick = HAL_GetTick();
@@ -37,7 +32,7 @@ float DiffBot::readEncoderRight() {
     return (2.0f*M_PI*WHEEL_RADIUS*revs); // m
 }
 
-DiffBot::DiffBot(Point pose, float dt) : pose(pose), motor(), dt(dt) {
+DiffBot::DiffBot(Point pose, float dt) : pose(pose), dt(dt) {
 };
 
 void DiffBot::stop(bool stop) {
@@ -48,8 +43,8 @@ void DiffBot::stop(bool stop) {
 void DiffBot::setup() {
 	pidLeft = PID(1, 0.0, 0.0, -PWM_MAX, PWM_MAX);
 	pidRight = PID(1, 0.0, 0.0, -PWM_MAX, PWM_MAX);
-	pidPos = PID(1, 0.0, 0.0, -2, 2);
-	pidTheta = PID(1, 0.0, 0.0, -M_PI, M_PI);
+	pidPos = PID(1, 0.0, 0.0, -V_MAX, V_MAX);
+	pidTheta = PID(1, 0.0, 0.0, -2.0f, 2);
 
 	prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
 	prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
@@ -95,10 +90,6 @@ void DiffBot::update(float dt) {
     		resetPID();
 
     		return;
-    	}
-
-    	if (targets[index].active == false) {
-    		targets[index].active = true;
     	}
 
     	break;
@@ -164,10 +155,8 @@ void DiffBot::update(float dt) {
     float vLeft = vRef - (WHEEL_BASE_2) * wRef;
     float vRight = vRef + (WHEEL_BASE_2) * wRef;
 
-    float v_max = 0.643f; // m/s
-
-    float pwm_ff_left = (vLeft / v_max) * PWM_MAX;
-    float pwm_ff_right = (vRight / v_max) * PWM_MAX;
+    float pwm_ff_left = (vLeft / V_MAX) * PWM_MAX;
+    float pwm_ff_right = (vRight / V_MAX) * PWM_MAX;
 
     float pwm_corr_left = pidLeft.compute(vLeft, leftVel, dt);
     float pwm_corr_right = pidRight.compute(vRight, rightVel, dt);

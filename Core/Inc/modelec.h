@@ -23,8 +23,9 @@
 #define WHEEL_BASE 0.287f
 #define WHEEL_BASE_2 (WHEEL_BASE/2.0f)
 #define PRECISE_ANGLE 0.017f // radians
-#define PRECISE_POS_FINAL 0.005f // meters
+#define PRECISE_POS_FINAL 0.01f // meters
 #define PRECISE_POS 0.1f // meters
+#define V_MAX 0.643f // m/s
 
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim2;
@@ -33,12 +34,15 @@ class DiffBot {
 public:
 	Point pose;
 
-	Point targets[MAX_WAYPOINTS];
+	Point targets[MAX_WAYPOINTS] = {
+			Point(0, FINAL, 0, 0, 0),
+	};
+
 	uint8_t index = 0;
 
     Motor motor;
 
-	float vx, vy, vtheta;
+	float vx = 0, vy = 0, vtheta = 0;
 
     float dt;
 

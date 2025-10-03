@@ -22,12 +22,15 @@ void Comm_GetPos(float& x, float& y, float& theta) {
 }
 
 void Comm_SetPos(float x, float y, float theta) {
-	bot.pose.x = x;
-	bot.pose.y = y;
+	bot.pose.x = x / 1000;
+	bot.pose.y = y / 1000;
 	bot.pose.theta = theta;
 }
 
-void Comm_GetSpeed(float& vx, float& vy, float& omega){
+void Comm_GetSpeed(float& vx, float& vy, float& omega) {
+	vx = bot.vx;
+	vy = bot.vy;
+	omega = bot.vtheta;
 }
 
 bool Comm_GetPID(char *pid, float &p, float &i, float &d) {
