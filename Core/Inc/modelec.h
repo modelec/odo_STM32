@@ -32,7 +32,7 @@ extern TIM_HandleTypeDef htim2;
 
 class DiffBot {
 public:
-	Point pose;
+	Point pos;
 
 	Point targets[MAX_WAYPOINTS] = {
 			Point(0, FINAL, 0, 0, 0),
@@ -64,7 +64,7 @@ public:
 
 	float readEncoderLeft();
 
-	DiffBot(Point pose, float dt);
+	DiffBot(Point pos, float dt);
 
 	void stop(bool stop);
 
@@ -75,6 +75,8 @@ public:
     void addTarget(int id, int type, float x, float y, float theta);
 
 	void resetPID();
+
+	void publishStatus();
 };
 
 #endif // MODELEC_H

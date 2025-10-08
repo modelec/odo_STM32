@@ -16,15 +16,15 @@
 extern DiffBot bot;
 
 void Comm_GetPos(float& x, float& y, float& theta) {
-	x = bot.pose.x;
-	y = bot.pose.y;
-	theta = bot.pose.theta;
+	x = bot.pos.x * 1000;
+	y = bot.pos.y * 1000;
+	theta = bot.pos.theta;
 }
 
 void Comm_SetPos(float x, float y, float theta) {
-	bot.pose.x = x / 1000;
-	bot.pose.y = y / 1000;
-	bot.pose.theta = theta;
+	bot.pos.x = x / 1000;
+	bot.pos.y = y / 1000;
+	bot.pos.theta = theta;
 }
 
 void Comm_GetSpeed(float& vx, float& vy, float& omega) {

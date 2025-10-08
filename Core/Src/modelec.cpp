@@ -32,7 +32,7 @@ float DiffBot::readEncoderRight() {
     return (2.0f*M_PI*WHEEL_RADIUS*revs); // m
 }
 
-DiffBot::DiffBot(Point pose, float dt) : pose(pose), dt(dt) {
+DiffBot::DiffBot(Point pos, float dt) : pos(pos), dt(dt) {
 };
 
 void DiffBot::stop(bool stop) {
@@ -41,10 +41,10 @@ void DiffBot::stop(bool stop) {
 }
 
 void DiffBot::setup() {
-	pidLeft = PID(1, 0.0, 0.0, -PWM_MAX, PWM_MAX);
-	pidRight = PID(1, 0.0, 0.0, -PWM_MAX, PWM_MAX);
-	pidPos = PID(1, 0.0, 0.0, -V_MAX, V_MAX);
-	pidTheta = PID(1, 0.0, 0.0, -2.0f, 2);
+	pidLeft = PID(2, 0.0, 0.0, -PWM_MAX, PWM_MAX);
+	pidRight = PID(2, 0.0, 0.0, -PWM_MAX, PWM_MAX);
+	pidPos = PID(3, 0.0, 0.0, -V_MAX, V_MAX);
+	pidTheta = PID(4, 0.0, 0.0, -2.0f, 2);
 
 	prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
 	prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
@@ -57,15 +57,23 @@ void DiffBot::update(float dt) {
     float rightVel = readEncoderRight();
     float leftVel = readEncoderLeft();
 
+    if (rightVel == 0 && leftVel == 0 && (motor.rightTarget_PWM != 0 || motor.leftTarget_PWM != 0)) {
+        // TODO add something when the robot is stuck on the wall so the motor value are >= 0 but the encoder value are = 0
+    }
+
     // update pos
     float v = (leftVel + rightVel) / 2.0f;
     float w = (rightVel - leftVel) / WHEEL_BASE;
-    pose.x += v * cosf(pose.theta - w/2);
-    pose.y += v * sinf(pose.theta - w/2);
-    pose.theta += w;
+    pos.x += v * cosf(pos.theta - w/2);
+    pos.y += v * sinf(pos.theta - w/2);
+    pos.theta += w;
 
-    while (pose.theta >  M_PI) pose.theta -= 2*M_PI;
-    while (pose.theta < -M_PI) pose.theta += 2*M_PI;
+    while (pos.theta >  M_PI) pos.theta -= 2*M_PI;
+    while (pos.theta < -M_PI) pos.theta += 2*M_PI;
+
+    if (odo_active) {
+        publishStatus();
+    }
 
     if (!odo_active || !targets[index].active) {
     	motor.update();
@@ -73,13 +81,13 @@ void DiffBot::update(float dt) {
     }
 
     // pid setup
-    float dx = targets[index].x - pose.x;
-    float dy = targets[index].y - pose.y;
+    float dx = targets[index].x - pos.x;
+    float dy = targets[index].y - pos.y;
 
     switch (targets[index].state) {
     case FINAL:
 
-    	if (std::fabs(dx) <= PRECISE_POS_FINAL && std::fabs(dy) <= PRECISE_POS_FINAL && std::fabs(targets[index].theta - pose.theta) < PRECISE_ANGLE) {
+    	if (std::fabs(dx) <= PRECISE_POS_FINAL && std::fabs(dy) <= PRECISE_POS_FINAL && std::fabs(targets[index].theta - pos.theta) < PRECISE_ANGLE) {
     		targets[index].active = false;
     		motor.stop(true);
 
@@ -111,8 +119,8 @@ void DiffBot::update(float dt) {
 
     		resetPID();
 
-    		dx = targets[index].x - pose.x;
-    		dy = targets[index].y - pose.y;
+    		dx = targets[index].x - pos.x;
+    		dy = targets[index].y - pos.y;
 
     	}
 
@@ -124,7 +132,7 @@ void DiffBot::update(float dt) {
 	float dist = sqrtf(dx*dx + dy*dy);
 
 	float angleTarget = atan2f(dy, dx);
-	float angleError = angleTarget - pose.theta;
+	float angleError = angleTarget - pos.theta;
 
 	while (angleError > M_PI) angleError -= 2*M_PI;
 	while (angleError < -M_PI) angleError += 2*M_PI;
@@ -145,7 +153,7 @@ void DiffBot::update(float dt) {
 	float wRef;
 
     if (targets[index].state == FINAL && std::fabs(dx) <= PRECISE_POS_FINAL && std::fabs(dy) <= PRECISE_POS_FINAL) {
-        wRef = pidTheta.compute(targets[index].theta, pose.theta, dt);
+        wRef = pidTheta.compute(targets[index].theta, pos.theta, dt);
         vRef = 0;
     }
     else {
@@ -196,4 +204,10 @@ void DiffBot::resetPID() {
 	pidRight.reset();
 	pidPos.reset();
 	pidTheta.reset();
+}
+
+void DiffBot::publishStatus() {
+    char response[64];
+    snprintf(response, sizeof(response), "SET;POS;%.4f;%.4f;%.4f\n", pos.x*1000, pos.y*1000, pos.theta);
+    CDC_Transmit_FS((uint8_t*)response, strlen(response));
 }
