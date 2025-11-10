@@ -29,9 +29,17 @@ public:
         this->kd = kd;
     }
 
+    void setLimits(float out_min, float out_max) {
+    	this->outMin = out_min;
+    	this->outMax = out_max;
+    }
+
     float getKp() const { return kp; }
     float getKi() const { return ki; }
     float getKd() const { return kd; }
+    float getOutMin() const { return outMin; }
+    float getOutMax() const { return outMax; }
+
 };
 
 

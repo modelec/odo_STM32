@@ -12,6 +12,7 @@
 #include "modelec.h"
 #include "motors.h"
 #include "pid.h"
+#include <cmath>
 
 extern DiffBot bot;
 
@@ -33,50 +34,41 @@ void Comm_GetSpeed(float& vx, float& vy, float& omega) {
 	omega = bot.vtheta;
 }
 
-bool Comm_GetPID(char *pid, float &p, float &i, float &d) {
-	if (strcmp(pid, "LEFT") == 0) {
-		p = bot.pidLeft.getKp();
-		i = bot.pidLeft.getKi();
-		d = bot.pidLeft.getKd();
-	}
-	else if (strcmp(pid, "RIGHT") == 0) {
-		p = bot.pidRight.getKp();
-		i = bot.pidRight.getKi();
-		d = bot.pidRight.getKd();
-	}
-	else if (strcmp(pid, "POS") == 0) {
-		p = bot.pidPos.getKp();
-		i = bot.pidPos.getKi();
-		d = bot.pidPos.getKd();
-	}
-	else if (strcmp(pid, "THETA") == 0) {
-		p = bot.pidTheta.getKp();
-		i = bot.pidTheta.getKi();
-		d = bot.pidTheta.getKd();
-	}
-	else {
-		return false;
-	}
-	return true;
+bool Comm_GetPID(char *pid_name, float &p, float &i, float &d, float &v_min, float &v_max) {
+    PID* pid = nullptr;
+
+    if (strcmp(pid_name, "LEFT") == 0) pid = &bot.pidLeft;
+    else if (strcmp(pid_name, "RIGHT") == 0) pid = &bot.pidRight;
+    else if (strcmp(pid_name, "POS") == 0) pid = &bot.pidPos;
+    else if (strcmp(pid_name, "THETA") == 0) pid = &bot.pidTheta;
+    else return false;
+
+    p = pid->getKp();
+    i = pid->getKi();
+    d = pid->getKd();
+    v_min = pid->getOutMin();
+    v_max = pid->getOutMax();
+
+    return true;
 }
 
-bool Comm_SetPID(char *pid, float p, float i, float d) {
-	if (strcmp(pid, "LEFT") == 0) {
-		bot.pidLeft.setTunings(p, i, d);
-	}
-	else if (strcmp(pid, "RIGHT") == 0) {
-		bot.pidRight.setTunings(p, i, d);
-	}
-	else if (strcmp(pid, "POS") == 0) {
-		bot.pidPos.setTunings(p, i, d);
-	}
-	else if (strcmp(pid, "THETA") == 0) {
-		bot.pidTheta.setTunings(p, i, d);
-	}
-	else {
-		return false;
-	}
-	return true;
+bool Comm_SetPID(char *pid_name, float p, float i, float d, float out_min, float out_max) {
+    PID* pid = nullptr;
+
+    if (strcmp(pid_name, "LEFT") == 0)       pid = &bot.pidLeft;
+    else if (strcmp(pid_name, "RIGHT") == 0) pid = &bot.pidRight;
+    else if (strcmp(pid_name, "POS") == 0)   pid = &bot.pidPos;
+    else if (strcmp(pid_name, "THETA") == 0) pid = &bot.pidTheta;
+    else return false;
+
+    pid->setTunings(p, i, d);
+
+    // only set limits if user provided them
+    if (!std::isnan(out_min) && !std::isnan(out_max)) {
+        pid->setLimits(out_min, out_max);
+    }
+
+    return true;
 }
 
 void Comm_StartOdometry(bool on) {
@@ -94,4 +86,12 @@ float Comm_GetDistance(int n) {
 void Comm_SetPWM(float left, float right) {
 	bot.motor.leftTarget_PWM = left;
 	bot.motor.rightTarget_PWM = right;
+}
+
+void Comm_SetPublishFrequency(uint32_t frequencyPublish) {
+	bot.frequencyPublish = frequencyPublish;
+}
+
+void Comm_GetPublishFrequency(uint32_t &frequencyPublish) {
+	frequencyPublish = bot.frequencyPublish;
 }

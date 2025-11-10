@@ -11,6 +11,8 @@
 #include "modelec.h"
 #include "usbd_cdc_if.h"
 
+#include <cmath>
+
 // fourni par CubeMX dans usb_device.c
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
@@ -31,17 +33,24 @@ void USB_Comm_OnReceive(uint8_t* Buf, uint32_t Len) {
 
     for (uint32_t i = 0; i < Len; i++) {
         char c = Buf[i];
+
         if (c == '\n' || c == '\r') {
+            if (usb_rx_index == 0) continue; // ignore empty lines
+
             usb_rx_buffer[usb_rx_index] = '\0';
             memcpy(parse_buffer, usb_rx_buffer, usb_rx_index + 1);
             usb_rx_index = 0;
             data_ready = 1;
-            return;
+
+            USB_Comm_Process();
         } else {
-            usb_rx_buffer[usb_rx_index++] = c;
+            if (usb_rx_index < RX_BUFFER_SIZE - 1) {
+                usb_rx_buffer[usb_rx_index++] = c;
+            } else {
+                usb_rx_index = 0;
+            }
         }
-    }
-}
+    }}
 
 // Répondre via USB
 static void USB_Comm_Send(const char* message) {
@@ -78,10 +87,10 @@ void USB_Comm_Process(void) {
         }
         else if (strcmp(token, "PID") == 0) {
             char* pid = strtok(NULL, ";");
-            float p, i, d;
-            if (Comm_GetPID(pid, p, i, d)) {
+            float p, i, d, v_min, v_max;
+            if (Comm_GetPID(pid, p, i, d, v_min, v_max)) {
                 char response[64];
-                snprintf(response, sizeof(response), "SET;PID;%.4f;%.4f;%.4f\n", p, i, d);
+                snprintf(response, sizeof(response), "SET;PID;%.4f;%.4f;%.4f;%.4f,%.4f\n", p, i, d, v_min, v_max);
                 USB_Comm_Send(response);
             }
             else {
@@ -95,6 +104,15 @@ void USB_Comm_Process(void) {
             float dist = Comm_GetDistance(n);
             char response[64];
             snprintf(response, sizeof(response), "SET;DIST;%d;%.2f\n", n, dist);
+            USB_Comm_Send(response);
+        }
+        else if (strcmp(token, "FREQUENCY")) {
+            token = strtok(NULL, ";");
+            if (!token) return;
+            uint32_t freq;
+            Comm_GetPublishFrequency(freq);
+            char response[64];
+            snprintf(response, sizeof(response), "SET;FREQUENCY;%ld\n", freq);
             USB_Comm_Send(response);
         }
         else {
@@ -114,16 +132,52 @@ void USB_Comm_Process(void) {
         }
         else if (strcmp(token, "PID") == 0) {
             char* pid = strtok(NULL, ";");
-            float p = atof(strtok(NULL, ";"));
-            float i = atof(strtok(NULL, ";"));
-            float d = atof(strtok(NULL, ";"));
+            if (!pid) {
+                USB_Comm_Send("KO;PID;MISSING_NAME\n");
+                return;
+            }
 
-            if (Comm_SetPID(pid, p, i, d)) {
-                USB_Comm_Send("OK;PID\n");
+            char* p_str = strtok(NULL, ";");
+            char* i_str = strtok(NULL, ";");
+            char* d_str = strtok(NULL, ";");
+
+            if (!p_str || !i_str || !d_str) {
+                char msg[64];
+                snprintf(msg, sizeof(msg), "KO;PID;%s;MISSING_VALUES\n", pid);
+                USB_Comm_Send(msg);
+                return;
             }
-            else {
-                USB_Comm_Send("KO;PID;UNKNOWN\n");
+
+            float p = atof(p_str);
+            float i = atof(i_str);
+            float d = atof(d_str);
+
+            // Optional parameters
+            char* out_min_str = strtok(NULL, ";");
+            char* out_max_str = strtok(NULL, ";");
+
+            bool has_out_min = (out_min_str != nullptr);
+            bool has_out_max = (out_max_str != nullptr);
+
+            float out_min = has_out_min ? atof(out_min_str) : 0.0f;
+            float out_max = has_out_max ? atof(out_max_str) : 0.0f;
+
+            bool success = false;
+
+            // Call with or without output limits
+            if (has_out_min && has_out_max) {
+                success = Comm_SetPID(pid, p, i, d, out_min, out_max);
+            } else {
+                success = Comm_SetPID(pid, p, i, d, NAN, NAN);
             }
+
+            char msg[64];
+            if (success) {
+                snprintf(msg, sizeof(msg), "OK;PID;%s\n", pid);
+            } else {
+                snprintf(msg, sizeof(msg), "KO;PID;%s;UNKNOWN\n", pid);
+            }
+            USB_Comm_Send(msg);
         }
         else if (strcmp(token, "WAYPOINT") == 0) {
 
@@ -168,11 +222,22 @@ void USB_Comm_Process(void) {
 
             USB_Comm_Send("OK;MOTOR\n");
         }
+        else if (strcmp(token, "FREQUENCY")) {
+            uint32_t freq = atoi(strtok(NULL, ";"));
+            Comm_SetPublishFrequency(freq);
+            char response[64];
+            snprintf(response, sizeof(response), "OK;FREQUENCY;%ld\n", freq);
+            USB_Comm_Send(response);
+        }
         else {
-            USB_Comm_Send("KO;UNKNOWN\n");
+            char response[268];
+            snprintf(response, sizeof(response), "KO;UNKNOWN;%s\n", parse_buffer);
+            USB_Comm_Send(response);
         }
     }
     else {
-        USB_Comm_Send("KO;UNKNOWN\n");
+        char response[268];
+        snprintf(response, sizeof(response), "KO;UNKNOWN;%s\n", parse_buffer);
+        USB_Comm_Send(response);
     }
 }

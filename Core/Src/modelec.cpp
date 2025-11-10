@@ -44,7 +44,7 @@ void DiffBot::setup() {
 	pidLeft = PID(2, 0.0, 0.0, -PWM_MAX, PWM_MAX);
 	pidRight = PID(2, 0.0, 0.0, -PWM_MAX, PWM_MAX);
 	pidPos = PID(3, 0.0, 0.0, -V_MAX, V_MAX);
-	pidTheta = PID(4, 0.0, 0.0, -2.0f, 2);
+	pidTheta = PID(4, 0.0, 0.0, -M_PI, M_PI);
 
 	prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
 	prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
@@ -71,7 +71,7 @@ void DiffBot::update(float dt) {
     while (pos.theta >  M_PI) pos.theta -= 2*M_PI;
     while (pos.theta < -M_PI) pos.theta += 2*M_PI;
 
-    if (odo_active) {
+    if (odo_active && isDelayPassedFrom(dt*1000*frequencyPublish, publishLastTick)) {
         publishStatus();
     }
 

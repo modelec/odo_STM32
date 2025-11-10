@@ -55,6 +55,8 @@ public:
 	bool arrive = false;
 
 	uint32_t lastTick = 0;
+	uint32_t publishLastTick = 0;
+	uint32_t frequencyPublish = 20;
 
 	static bool isDelayPassedFrom(uint32_t delay, uint32_t& lastTick);
 
