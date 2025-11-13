@@ -29,6 +29,18 @@ void Comm_SetPublishFrequency(uint32_t frequencyPublish = 20);
 
 void Comm_GetPublishFrequency(uint32_t &frequencyPublish);
 
+float Comm_GetPreciseAngle();
+
+float Comm_GetPrecisePos();
+
+float Comm_GetPrecisePosFinal();
+
+void Comm_SetPreciseAngle(float d);
+
+void Comm_SetPrecisePos(float d);
+
+void Comm_SetPrecisePosFinal(float d);
+
 #ifdef __cplusplus
 }
 #endif

@@ -106,7 +106,7 @@ void USB_Comm_Process(void) {
             snprintf(response, sizeof(response), "SET;DIST;%d;%.2f\n", n, dist);
             USB_Comm_Send(response);
         }
-        else if (strcmp(token, "FREQUENCY")) {
+        else if (strcmp(token, "FREQUENCY") == 0) {
             token = strtok(NULL, ";");
             if (!token) return;
             uint32_t freq;
@@ -114,6 +114,39 @@ void USB_Comm_Process(void) {
             char response[64];
             snprintf(response, sizeof(response), "SET;FREQUENCY;%ld\n", freq);
             USB_Comm_Send(response);
+        }
+        else if (strcmp(token, "PRECISE") == 0) {
+            token = strtok(NULL, ";");
+
+            if (!token) {
+            	USB_Comm_Send("KO;UNKNOWN;NEED_DATA");
+            }
+            else {
+            	float d;
+
+				if (strcmp(token, "POS") == 0) {
+					token = strtok(NULL, ";");
+
+					if (strcmp(token, "FINAL") == 0) {
+						d = Comm_GetPrecisePosFinal();
+			            char response[64];
+			            snprintf(response, sizeof(response), "SET;PRECISE;POS;FINAL;%.4f\n", d);
+			            USB_Comm_Send(response);
+					}
+					else {
+						d = Comm_GetPrecisePos();
+			            char response[64];
+			            snprintf(response, sizeof(response), "SET;PRECISE;POS;%.4f\n", d);
+			            USB_Comm_Send(response);
+					}
+				}
+				else if (strcmp(token, "ANGLE") == 0) {
+					d = Comm_GetPreciseAngle();
+		            char response[64];
+		            snprintf(response, sizeof(response), "SET;PRECISE;ANGLE;%.4f\n", d);
+		            USB_Comm_Send(response);
+				}
+            }
         }
         else {
             USB_Comm_Send("KO;UNKNOWN\n");
@@ -222,12 +255,51 @@ void USB_Comm_Process(void) {
 
             USB_Comm_Send("OK;MOTOR\n");
         }
-        else if (strcmp(token, "FREQUENCY")) {
+        else if (strcmp(token, "FREQUENCY") == 0) {
             uint32_t freq = atoi(strtok(NULL, ";"));
             Comm_SetPublishFrequency(freq);
             char response[64];
             snprintf(response, sizeof(response), "OK;FREQUENCY;%ld\n", freq);
             USB_Comm_Send(response);
+        }
+        else if (strcmp(token, "PRECISE") == 0) {
+            token = strtok(NULL, ";");
+
+            if (!token) {
+            	USB_Comm_Send("KO;UNKNOWN;NEED_DATA");
+            }
+            else {
+            	float d;
+
+				if (strcmp(token, "POS") == 0) {
+					token = strtok(NULL, ";");
+
+					if (strcmp(token, "FINAL") == 0) {
+						float d = atof(strtok(NULL, ";"));
+
+						Comm_SetPrecisePosFinal(d);
+			            char response[64];
+			            snprintf(response, sizeof(response), "SET;PRECISE;POS;FINAL;%.4f\n", d);
+			            USB_Comm_Send(response);
+					}
+					else {
+						float d = atof(token);
+
+						Comm_SetPrecisePos(d);
+			            char response[64];
+			            snprintf(response, sizeof(response), "SET;PRECISE;POS;%.4f\n", d);
+			            USB_Comm_Send(response);
+					}
+				}
+				else if (strcmp(token, "ANGLE") == 0) {
+					float d = atof(strtok(NULL, ";"));
+
+					Comm_SetPreciseAngle(d);
+		            char response[64];
+		            snprintf(response, sizeof(response), "SET;PRECISE;ANGLE;%.4f\n", d);
+		            USB_Comm_Send(response);
+				}
+            }
         }
         else {
             char response[268];

@@ -71,7 +71,7 @@ void DiffBot::update(float dt) {
     while (pos.theta >  M_PI) pos.theta -= 2*M_PI;
     while (pos.theta < -M_PI) pos.theta += 2*M_PI;
 
-    if (odo_active && isDelayPassedFrom(dt*1000*frequencyPublish, publishLastTick)) {
+    if (odo_active && isDelayPassedFrom(frequencyPublish, publishLastTick)) {
         publishStatus();
     }
 
@@ -87,7 +87,7 @@ void DiffBot::update(float dt) {
     switch (targets[index].state) {
     case FINAL:
 
-    	if (std::fabs(dx) <= PRECISE_POS_FINAL && std::fabs(dy) <= PRECISE_POS_FINAL && std::fabs(targets[index].theta - pos.theta) < PRECISE_ANGLE) {
+    	if (std::fabs(dx) <= precisePosFinal && std::fabs(dy) <= precisePosFinal && std::fabs(targets[index].theta - pos.theta) < preciseAngle) {
     		targets[index].active = false;
     		motor.stop(true);
 
@@ -103,7 +103,7 @@ void DiffBot::update(float dt) {
     	break;
     case INTERMEDIAIRE:
 
-    	if (std::fabs(dx) < PRECISE_POS && std::fabs(dy) < PRECISE_POS) {
+    	if (std::fabs(dx) < precisePos && std::fabs(dy) < precisePos) {
 
     		char log[32];
     		sprintf(log, "SET;WAYPOINT;%d\n", index);
@@ -143,7 +143,7 @@ void DiffBot::update(float dt) {
 		angleError > 0 ? angleError -= M_PI : angleError += M_PI;
 	}
 
-	if (std::fabs(angleError) <= PRECISE_POS_FINAL) angleError = 0;
+	if (std::fabs(angleError) <= precisePosFinal) angleError = 0;
 
 	float distError = dist * cosf(angleError);
 
@@ -152,7 +152,7 @@ void DiffBot::update(float dt) {
     float vRef = pidPos.compute(0.0, -distError, dt);
 	float wRef;
 
-    if (targets[index].state == FINAL && std::fabs(dx) <= PRECISE_POS_FINAL && std::fabs(dy) <= PRECISE_POS_FINAL) {
+    if (targets[index].state == FINAL && std::fabs(dx) <= precisePosFinal && std::fabs(dy) <= precisePosFinal) {
         wRef = pidTheta.compute(targets[index].theta, pos.theta, dt);
         vRef = 0;
     }

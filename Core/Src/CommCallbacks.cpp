@@ -95,3 +95,27 @@ void Comm_SetPublishFrequency(uint32_t frequencyPublish) {
 void Comm_GetPublishFrequency(uint32_t &frequencyPublish) {
 	frequencyPublish = bot.frequencyPublish;
 }
+
+float Comm_GetPreciseAngle() {
+	return bot.preciseAngle;
+}
+
+float Comm_GetPrecisePos() {
+	return bot.precisePos;
+}
+
+float Comm_GetPrecisePosFinal() {
+	return bot.precisePosFinal;
+}
+
+void Comm_SetPreciseAngle(float d) {
+	bot.preciseAngle = d;
+}
+
+void Comm_SetPrecisePos(float d) {
+	bot.precisePos = d;
+}
+
+void Comm_SetPrecisePosFinal(float d) {
+	bot.precisePosFinal = d;
+}

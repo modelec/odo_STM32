@@ -22,9 +22,6 @@
 #define WHEEL_RADIUS (WHEEL_DIAMETER/2.0f)
 #define WHEEL_BASE 0.287f
 #define WHEEL_BASE_2 (WHEEL_BASE/2.0f)
-#define PRECISE_ANGLE 0.017f // radians
-#define PRECISE_POS_FINAL 0.01f // meters
-#define PRECISE_POS 0.1f // meters
 #define V_MAX 0.643f // m/s
 
 extern TIM_HandleTypeDef htim3;
@@ -56,7 +53,11 @@ public:
 
 	uint32_t lastTick = 0;
 	uint32_t publishLastTick = 0;
-	uint32_t frequencyPublish = 20;
+	uint32_t frequencyPublish = 200;
+
+	float preciseAngle = 0.017f;
+	float precisePosFinal = 0.01f;
+	float precisePos = 0.1f;
 
 	static bool isDelayPassedFrom(uint32_t delay, uint32_t& lastTick);
 
