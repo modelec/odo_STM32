@@ -122,6 +122,12 @@ void USB_Comm_Process(void) {
             snprintf(response, sizeof(response), "SET;MOTOR;%.2f,%.2f\n", l, r);
             USB_Comm_Send(response);
         }
+        else if (strcmp(token, "ACTION") == 0) {
+        	uint8_t action = Comm_GetAction();
+            char response[64];
+            snprintf(response, sizeof(response), "SET;ACTION;%d\n", action);
+            USB_Comm_Send(response);
+        }
         else if (strcmp(token, "PRECISE") == 0) {
             token = strtok(NULL, ";");
 
@@ -159,7 +165,7 @@ void USB_Comm_Process(void) {
         	token = strtok(NULL, ";");
 
         	if (token) {
-        		if (strcmp(token, "NOT") == 0) {
+        		if (strcmp(token, "NO") == 0) {
                 	token = strtok(NULL, ";");
 					if (strcmp(token, "MOVE") == 0) {
 						uint32_t time = Comm_GetNotMoveTime();
@@ -284,6 +290,37 @@ void USB_Comm_Process(void) {
             snprintf(response, sizeof(response), "OK;FREQUENCY;%ld\n", freq);
             USB_Comm_Send(response);
         }
+        else if (strcmp(token, "ACTION") == 0) {
+            uint8_t action = atoi(strtok(NULL, ";"));
+            Comm_SetAction(action);
+            char response[64];
+            snprintf(response, sizeof(response), "OK;ACTION;%d\n", action);
+            USB_Comm_Send(response);
+        }
+        else if (strcmp(token, "ALIGNEMENT") == 0) {
+        	token = strtok(NULL, ";");
+
+            uint8_t action;
+
+            if (strcmp(token, "LEFT") == 0) {
+            	action = 1;
+        	}
+        	else if (strcmp(token, "TOP") == 0) {
+            	action = 2;
+        	}
+        	else if (strcmp(token, "RIGHT") == 0) {
+            	action = 3;
+			}
+        	else if (strcmp(token, "BOTTOM") == 0) {
+            	action = 4;
+			}
+
+    		Comm_SetAlignement(action);
+
+            char response[64];
+            snprintf(response, sizeof(response), "OK;ACTION;%d\n", action);
+            USB_Comm_Send(response);
+        }
         else if (strcmp(token, "PRECISE") == 0) {
             token = strtok(NULL, ";");
 
@@ -325,7 +362,7 @@ void USB_Comm_Process(void) {
         	token = strtok(NULL, ";");
 
         	if (token) {
-        		if (strcmp(token, "NOT") == 0) {
+        		if (strcmp(token, "NO") == 0) {
                 	token = strtok(NULL, ";");
 					if (strcmp(token, "MOVE") == 0) {
 						token = strtok(NULL, ";");

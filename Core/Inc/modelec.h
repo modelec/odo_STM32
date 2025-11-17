@@ -52,8 +52,10 @@ public:
 	bool arrive = false;
 
 	uint32_t publishNotMoved = 0;
-	uint32_t notMovedMaxTime = 500;
+	uint32_t notMovedMaxTime = 100;
 	bool no_move = false;
+
+	uint8_t action = 0;
 
 	uint32_t lastTick = 0;
 	uint32_t publishLastTick = 0;

@@ -133,3 +133,39 @@ float Comm_GetNotMoveTime() {
 void Comm_SetNotMoveTime(float time) {
 	bot.notMovedMaxTime = time;
 }
+
+void Comm_SetAction(uint8_t time) {
+	bot.action = time;
+}
+
+uint8_t Comm_GetAction() {
+	return bot.action;
+}
+
+void Comm_SetAlignement(uint8_t action) {
+
+	float x = bot.pos.x;
+	float y = bot.pos.y;
+	float theta = bot.pos.theta;
+
+	switch (action) {
+	case 1: // LEFT
+		x = 0.0f;
+		break;
+	case 2: // TOP
+		y = 2.0f;
+		break;
+	case 3: // RIGHT
+		x = 3.0f;
+		break;
+	case 4: // BOTTOM
+		y = 0.0f;
+		break;
+	default:
+		break;
+	}
+
+	bot.addTarget(0, 1, x, y, theta);
+
+	Comm_SetAction(action);
+}

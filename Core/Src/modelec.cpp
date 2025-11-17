@@ -65,7 +65,50 @@ void DiffBot::update(float dt) {
     		publishNotMoved = HAL_GetTick();
     	}
     	else if (isDelayPassedFrom(notMovedMaxTime, publishNotMoved)) {
-    		motor.stop(true);
+    		stop(true);
+
+    		if (action != 0) {
+    			switch (action) {
+    			case 1: // LEFT
+    				if (cos(pos.theta) > 0) {
+    					pos.x = 0.1f; // dist fron back to center
+    				}
+    				else {
+    					pos.x = 0.1f; // dist fron center to front
+    				}
+    				break;
+    			case 2: // TOP
+    				if (sin(pos.theta) > 0) {
+    					pos.y = 2.0f - 0.1f; // dist fron center to front
+    				}
+    				else {
+    					pos.y = 2.0f - 0.1f; // dist fron back to center
+    				}
+    				break;
+    			case 3: // RIGHT
+    				if (cos(pos.theta) > 0) {
+    					pos.x = 3.0f - 0.1f; // dist fron center to front
+    				}
+    				else {
+    					pos.x = 3.0f - 0.1f; // dist fron back to center
+    				}
+    				break;
+    			case 4: // BOTTOM
+    				if (sin(pos.theta) > 0) {
+    					pos.y = 0.1f; // dist fron back to center
+    				}
+    				else {
+    					pos.y = 0.1f; // dist fron center to front
+    				}
+    				break;
+    			default:
+    				break;
+    			}
+
+    			action = 0;
+
+    			publishStatus();
+    		}
     	}
 
 
