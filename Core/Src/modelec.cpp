@@ -57,63 +57,67 @@ void DiffBot::update(float dt) {
     float rightVel = readEncoderRight();
     float leftVel = readEncoderLeft();
 
-    if (rightVel == 0 && leftVel == 0 && (motor.rightTarget_PWM != 0 || motor.leftTarget_PWM != 0)) {
-        // TODO add something when the robot is stuck on the wall so the motor value are >= 0 but the encoder value are = 0
+    if (rightVel == 0 && leftVel == 0) {
+    	if (motor.rightTarget_PWM != 0 || motor.leftTarget_PWM != 0) {
+            // TODO add something when the robot is stuck on the wall so the motor value are >= 0 but the encoder value are = 0
+        	if (!no_move) {
+        		no_move = true;
+        		publishNotMoved = HAL_GetTick();
+        	}
+        	else if (isDelayPassedFrom(notMovedMaxTime, publishNotMoved)) {
+        		// BUG : apres ca le robot ne s'arrete plus quand on le relance
+        		targets[index].active = false;
 
-    	if (!no_move) {
-    		no_move = true;
-    		publishNotMoved = HAL_GetTick();
+        		if (action != 0) {
+        			switch (action) {
+        			case 1: // LEFT
+        				if (cos(pos.theta) > 0) {
+        					pos.x = 0.1f; // dist fron back to center
+        				}
+        				else {
+        					pos.x = 0.1f; // dist fron center to front
+        				}
+        				break;
+        			case 2: // TOP
+        				if (sin(pos.theta) > 0) {
+        					pos.y = 2.0f - 0.1f; // dist fron center to front
+        				}
+        				else {
+        					pos.y = 2.0f - 0.1f; // dist fron back to center
+        				}
+        				break;
+        			case 3: // RIGHT
+        				if (cos(pos.theta) > 0) {
+        					pos.x = 3.0f - 0.1f; // dist fron center to front
+        				}
+        				else {
+        					pos.x = 3.0f - 0.1f; // dist fron back to center
+        				}
+        				break;
+        			case 4: // BOTTOM
+        				if (sin(pos.theta) > 0) {
+        					pos.y = 0.1f; // dist fron back to center
+        				}
+        				else {
+        					pos.y = 0.1f; // dist fron center to front
+        				}
+        				break;
+        			default:
+        				break;
+        			}
+
+        			action = 0;
+
+        			addTarget(0, 1, pos.x, pos.y, pos.theta);
+
+        			publishStatus();
+        		}
+        	}
     	}
-    	else if (isDelayPassedFrom(notMovedMaxTime, publishNotMoved)) {
-    		stop(true);
-
-    		if (action != 0) {
-    			switch (action) {
-    			case 1: // LEFT
-    				if (cos(pos.theta) > 0) {
-    					pos.x = 0.1f; // dist fron back to center
-    				}
-    				else {
-    					pos.x = 0.1f; // dist fron center to front
-    				}
-    				break;
-    			case 2: // TOP
-    				if (sin(pos.theta) > 0) {
-    					pos.y = 2.0f - 0.1f; // dist fron center to front
-    				}
-    				else {
-    					pos.y = 2.0f - 0.1f; // dist fron back to center
-    				}
-    				break;
-    			case 3: // RIGHT
-    				if (cos(pos.theta) > 0) {
-    					pos.x = 3.0f - 0.1f; // dist fron center to front
-    				}
-    				else {
-    					pos.x = 3.0f - 0.1f; // dist fron back to center
-    				}
-    				break;
-    			case 4: // BOTTOM
-    				if (sin(pos.theta) > 0) {
-    					pos.y = 0.1f; // dist fron back to center
-    				}
-    				else {
-    					pos.y = 0.1f; // dist fron center to front
-    				}
-    				break;
-    			default:
-    				break;
-    			}
-
-    			action = 0;
-
-    			publishStatus();
-    		}
+    } else {
+    	if (no_move) {
+    		no_move = false;
     	}
-
-
-    } else if (no_move) {
-    	no_move = false;
     }
 
     // update pos

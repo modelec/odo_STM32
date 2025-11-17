@@ -169,3 +169,16 @@ void Comm_SetAlignment(uint8_t action) {
 
 	Comm_SetAction(action);
 }
+
+void Comm_GetWaypoint(uint8_t &id, uint8_t &type, float &x, float &y, float &theta, bool &active) {
+	type = bot.targets[id].state;
+	x = bot.targets[id].x;
+	y = bot.targets[id].y;
+	theta = bot.targets[id].theta;
+	active = bot.targets[id].active;
+}
+
+void Comm_GetActiveWaypoint(uint8_t &id, uint8_t &type, float &x, float &y, float &theta, bool &active) {
+	id = bot.index;
+	Comm_GetWaypoint(id, type, x, y, theta, active);
+}

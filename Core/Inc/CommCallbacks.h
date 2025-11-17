@@ -53,6 +53,10 @@ uint8_t Comm_GetAction();
 
 void Comm_SetAlignment(uint8_t action);
 
+void Comm_GetWaypoint(uint8_t &id, uint8_t &type, float &x, float &y, float &theta, bool &active);
+
+void Comm_GetActiveWaypoint(uint8_t &id, uint8_t &type, float &x, float &y, float &theta, bool &active);
+
 #ifdef __cplusplus
 }
 #endif

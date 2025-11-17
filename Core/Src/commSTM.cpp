@@ -115,6 +115,26 @@ void USB_Comm_Process(void) {
             snprintf(response, sizeof(response), "SET;FREQUENCY;%ld\n", freq);
             USB_Comm_Send(response);
         }
+        else if (strcmp(token, "WAYPOINT") == 0) {
+            token = strtok(NULL, ";");
+            if (!token) return;
+
+            float x, y, theta;
+            uint8_t id, type;
+            bool active;
+
+            if (strcmp(token, "ACTIVE") == 0) {
+            	Comm_GetActiveWaypoint(id, type, x, y, theta, active);
+            }
+            else {
+            	id = atoi(token);
+            	Comm_GetWaypoint(id, type, x, y, theta, active);
+            }
+
+            char response[128];
+            snprintf(response, sizeof(response), "SET;WAYPOINT;%d,%d,%.4f,%.4f,%.4f,%d\n", id, type, x, y, theta, active);
+            USB_Comm_Send(response);
+        }
         else if (strcmp(token, "MOTOR") == 0) {
         	float l, r;
         	Comm_GetPWM(l, r);
