@@ -297,7 +297,7 @@ void USB_Comm_Process(void) {
             snprintf(response, sizeof(response), "OK;ACTION;%d\n", action);
             USB_Comm_Send(response);
         }
-        else if (strcmp(token, "ALIGNEMENT") == 0) {
+        else if (strcmp(token, "ALIGNMENT") == 0) {
         	token = strtok(NULL, ";");
 
             uint8_t action;
@@ -315,7 +315,7 @@ void USB_Comm_Process(void) {
             	action = 4;
 			}
 
-    		Comm_SetAlignement(action);
+    		Comm_SetAlignment(action);
 
             char response[64];
             snprintf(response, sizeof(response), "OK;ACTION;%d\n", action);

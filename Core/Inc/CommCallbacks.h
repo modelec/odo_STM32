@@ -51,7 +51,7 @@ void Comm_SetAction(uint8_t time);
 
 uint8_t Comm_GetAction();
 
-void Comm_SetAlignement(uint8_t action);
+void Comm_SetAlignment(uint8_t action);
 
 #ifdef __cplusplus
 }

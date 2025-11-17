@@ -142,7 +142,7 @@ uint8_t Comm_GetAction() {
 	return bot.action;
 }
 
-void Comm_SetAlignement(uint8_t action) {
+void Comm_SetAlignment(uint8_t action) {
 
 	float x = bot.pos.x;
 	float y = bot.pos.y;
