@@ -51,9 +51,13 @@ public:
 	bool odo_active = false;
 	bool arrive = false;
 
+	uint32_t publishNotMoved = 0;
+	uint32_t notMovedMaxTime = 500;
+	bool no_move = false;
+
 	uint32_t lastTick = 0;
 	uint32_t publishLastTick = 0;
-	uint32_t frequencyPublish = 200;
+	uint32_t frequencyPublish = 100;
 
 	float preciseAngle = 0.017f;
 	float precisePosFinal = 0.01f;

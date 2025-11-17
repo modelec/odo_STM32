@@ -59,6 +59,18 @@ void DiffBot::update(float dt) {
 
     if (rightVel == 0 && leftVel == 0 && (motor.rightTarget_PWM != 0 || motor.leftTarget_PWM != 0)) {
         // TODO add something when the robot is stuck on the wall so the motor value are >= 0 but the encoder value are = 0
+
+    	if (!no_move) {
+    		no_move = true;
+    		publishNotMoved = HAL_GetTick();
+    	}
+    	else if (isDelayPassedFrom(notMovedMaxTime, publishNotMoved)) {
+    		motor.stop(true);
+    	}
+
+
+    } else if (no_move) {
+    	no_move = false;
     }
 
     // update pos

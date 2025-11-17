@@ -115,6 +115,13 @@ void USB_Comm_Process(void) {
             snprintf(response, sizeof(response), "SET;FREQUENCY;%ld\n", freq);
             USB_Comm_Send(response);
         }
+        else if (strcmp(token, "MOTOR") == 0) {
+        	float l, r;
+        	Comm_GetPWM(l, r);
+            char response[64];
+            snprintf(response, sizeof(response), "SET;MOTOR;%.2f,%.2f\n", l, r);
+            USB_Comm_Send(response);
+        }
         else if (strcmp(token, "PRECISE") == 0) {
             token = strtok(NULL, ";");
 
@@ -147,6 +154,21 @@ void USB_Comm_Process(void) {
 		            USB_Comm_Send(response);
 				}
             }
+        }
+        else if (strcmp(token, "DATA") == 0) {
+        	token = strtok(NULL, ";");
+
+        	if (token) {
+        		if (strcmp(token, "NOT") == 0) {
+                	token = strtok(NULL, ";");
+					if (strcmp(token, "MOVE") == 0) {
+						uint32_t time = Comm_GetNotMoveTime();
+			            char response[64];
+			            snprintf(response, sizeof(response), "SET;NOT;MOVE;%ld\n", time);
+			            USB_Comm_Send(response);
+                	}
+        		}
+        	}
         }
         else {
             USB_Comm_Send("KO;UNKNOWN\n");
@@ -269,8 +291,6 @@ void USB_Comm_Process(void) {
             	USB_Comm_Send("KO;UNKNOWN;NEED_DATA");
             }
             else {
-            	float d;
-
 				if (strcmp(token, "POS") == 0) {
 					token = strtok(NULL, ";");
 
@@ -300,6 +320,24 @@ void USB_Comm_Process(void) {
 		            USB_Comm_Send(response);
 				}
             }
+        }
+        else if (strcmp(token, "DATA") == 0) {
+        	token = strtok(NULL, ";");
+
+        	if (token) {
+        		if (strcmp(token, "NOT") == 0) {
+                	token = strtok(NULL, ";");
+					if (strcmp(token, "MOVE") == 0) {
+						token = strtok(NULL, ";");
+
+						uint32_t time = strtoul(token, NULL, 10);
+						Comm_SetNotMoveTime(time);
+			            char response[64];
+			            snprintf(response, sizeof(response), "SET;NOT;MOVE;%ld\n", time);
+			            USB_Comm_Send(response);
+                	}
+        		}
+        	}
         }
         else {
             char response[268];

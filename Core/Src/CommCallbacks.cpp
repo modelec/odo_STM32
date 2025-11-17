@@ -88,6 +88,12 @@ void Comm_SetPWM(float left, float right) {
 	bot.motor.rightTarget_PWM = right;
 }
 
+
+void Comm_GetPWM(float &left, float &right) {
+	left = bot.motor.leftCurrent_PWM;
+	right = bot.motor.rightCurrent_PWM;
+}
+
 void Comm_SetPublishFrequency(uint32_t frequencyPublish) {
 	bot.frequencyPublish = frequencyPublish;
 }
@@ -118,4 +124,12 @@ void Comm_SetPrecisePos(float d) {
 
 void Comm_SetPrecisePosFinal(float d) {
 	bot.precisePosFinal = d;
+}
+
+float Comm_GetNotMoveTime() {
+	return bot.notMovedMaxTime;
+}
+
+void Comm_SetNotMoveTime(float time) {
+	bot.notMovedMaxTime = time;
 }
