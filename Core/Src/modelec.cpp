@@ -66,7 +66,11 @@ void DiffBot::update(float dt) {
         	}
         	else if (isDelayPassedFrom(notMovedMaxTime, publishNotMoved)) {
         		// BUG : apres ca le robot ne s'arrete plus quand on le relance
+        		motor.stop(true);
+
         		targets[index].active = false;
+
+    			no_move = false;
 
         		if (action != 0) {
         			switch (action) {
@@ -109,8 +113,6 @@ void DiffBot::update(float dt) {
         			action = 0;
 
         			addTarget(0, 1, pos.x, pos.y, pos.theta);
-
-        			publishStatus();
         		}
         	}
     	}
