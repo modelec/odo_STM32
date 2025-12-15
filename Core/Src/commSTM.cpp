@@ -50,7 +50,8 @@ void USB_Comm_OnReceive(uint8_t* Buf, uint32_t Len) {
                 usb_rx_index = 0;
             }
         }
-    }}
+    }
+}
 
 // Répondre via USB
 static void USB_Comm_Send(const char* message) {
@@ -288,7 +289,9 @@ void USB_Comm_Process(void) {
         	int val = atoi(strtok(NULL, ";"));
         	Comm_StartOdometry(val != 0);
 
-        	USB_Comm_Send("OK;START\n");
+            char msg[64];
+            snprintf(msg, sizeof(msg), "OK;START;%d\n", val != 0);
+        	USB_Comm_Send(msg);
         }
         else if (strcmp(token, "MOTOR") == 0) {
             float left = atof(strtok(NULL, ";"));
