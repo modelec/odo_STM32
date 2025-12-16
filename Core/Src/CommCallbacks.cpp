@@ -23,6 +23,8 @@ void Comm_GetPos(float& x, float& y, float& theta) {
 }
 
 void Comm_SetPos(float x, float y, float theta) {
+	theta = std::atan2(std::sin(theta), std::cos(theta));
+
 	bot.pos.x = x / 1000;
 	bot.pos.y = y / 1000;
 	bot.pos.theta = theta;
@@ -76,6 +78,8 @@ void Comm_StartOdometry(bool on) {
 }
 
 void Comm_AddWaypoint(int id, int type, float x, float y, float theta) {
+	theta = std::atan2(std::sin(theta), std::cos(theta));
+
 	bot.addTarget(id, type, x / 1000.0f, y / 1000.0f, theta);
 }
 

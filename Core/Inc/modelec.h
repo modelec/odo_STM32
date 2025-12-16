@@ -18,9 +18,9 @@
 #define MAX_WAYPOINTS 16
 #define PWM_MAX 626.0f
 #define ENCODER_RES 2400.0f
-#define WHEEL_DIAMETER 0.09735f
+#define WHEEL_DIAMETER 0.0985f
 #define WHEEL_RADIUS (WHEEL_DIAMETER/2.0f)
-#define WHEEL_BASE 0.2844f
+#define WHEEL_BASE 0.289f
 #define WHEEL_BASE_2 (WHEEL_BASE/2.0f)
 #define V_MAX 0.643f // m/s
 

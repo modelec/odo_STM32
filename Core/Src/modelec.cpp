@@ -41,10 +41,10 @@ void DiffBot::stop(bool stop) {
 }
 
 void DiffBot::setup() {
-	pidLeft = PID(2, 0.0, 0.0, -PWM_MAX, PWM_MAX);
-	pidRight = PID(2, 0.0, 0.0, -PWM_MAX, PWM_MAX);
-	pidPos = PID(3, 0.0, 0.0, -V_MAX, V_MAX);
-	pidTheta = PID(4, 0.0, 0.0, -M_PI, M_PI);
+	pidLeft = PID(1, 0.0, 0.0, -PWM_MAX, PWM_MAX);
+	pidRight = PID(1, 0.0, 0.0, -PWM_MAX, PWM_MAX);
+	pidPos = PID(1, 0.0, 0.0, -V_MAX, V_MAX);
+	pidTheta = PID(2, 0.0, 0.0, -M_PI, M_PI);
 
 	prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
 	prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
@@ -59,13 +59,11 @@ void DiffBot::update(float dt) {
 
     if (rightVel == 0 && leftVel == 0) {
     	if (motor.rightTarget_PWM != 0 || motor.leftTarget_PWM != 0) {
-            // TODO add something when the robot is stuck on the wall so the motor value are >= 0 but the encoder value are = 0
         	if (!no_move) {
         		no_move = true;
         		publishNotMoved = HAL_GetTick();
         	}
         	else if (isDelayPassedFrom(notMovedMaxTime, publishNotMoved)) {
-        		// BUG : apres ca le robot ne s'arrete plus quand on le relance
         		motor.stop(true);
 
         		targets[index].active = false;
