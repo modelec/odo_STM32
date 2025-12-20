@@ -151,7 +151,7 @@ void DiffBot::update(float dt) {
     		motor.stop(true);
 
     		char log[32];
-    		sprintf(log, "SET;WAYPOINT;%d\n", index);
+    		sprintf(log, "SET;WAYPOINT;REACH;%d\n", index);
     		CDC_Transmit_FS((uint8_t*)log, strlen(log));
 
     		resetPID();
@@ -165,7 +165,7 @@ void DiffBot::update(float dt) {
     	if (std::fabs(dx) < precisePos && std::fabs(dy) < precisePos) {
 
     		char log[32];
-    		sprintf(log, "SET;WAYPOINT;%d\n", index);
+    		sprintf(log, "SET;WAYPOINT;REACH;%d\n", index);
     		CDC_Transmit_FS((uint8_t*)log, strlen(log));
 
     		targets[index].active = false;

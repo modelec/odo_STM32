@@ -91,7 +91,7 @@ void USB_Comm_Process(void) {
             float p, i, d, v_min, v_max;
             if (Comm_GetPID(pid, p, i, d, v_min, v_max)) {
                 char response[64];
-                snprintf(response, sizeof(response), "SET;PID;%.4f;%.4f;%.4f;%.4f,%.4f\n", p, i, d, v_min, v_max);
+                snprintf(response, sizeof(response), "SET;PID;%.4f;%.4f;%.4f;%.4f;%.4f\n", p, i, d, v_min, v_max);
                 USB_Comm_Send(response);
             }
             else {
@@ -133,14 +133,14 @@ void USB_Comm_Process(void) {
             }
 
             char response[128];
-            snprintf(response, sizeof(response), "SET;WAYPOINT;%d,%d,%.4f,%.4f,%.4f,%d\n", id, type, x, y, theta, active);
+            snprintf(response, sizeof(response), "SET;WAYPOINT;%d;%d;%.4f;%.4f;%.4f;%d\n", id, type, x, y, theta, active);
             USB_Comm_Send(response);
         }
         else if (strcmp(token, "MOTOR") == 0) {
         	float l, r;
         	Comm_GetPWM(l, r);
             char response[64];
-            snprintf(response, sizeof(response), "SET;MOTOR;%.2f,%.2f\n", l, r);
+            snprintf(response, sizeof(response), "SET;MOTOR;%.2f;%.2f\n", l, r);
             USB_Comm_Send(response);
         }
         else if (strcmp(token, "ACTION") == 0) {
