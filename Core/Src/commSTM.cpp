@@ -153,7 +153,7 @@ void USB_Comm_Process(void) {
             token = strtok(NULL, ";");
 
             if (!token) {
-            	USB_Comm_Send("KO;UNKNOWN;NEED_DATA");
+            	USB_Comm_Send("KO;UNKNOWN;NEED_DATA\n");
             }
             else {
             	float d;
@@ -327,14 +327,11 @@ void USB_Comm_Process(void) {
 
             if (strcmp(token, "LEFT") == 0) {
             	action = 1;
-        	}
-        	else if (strcmp(token, "TOP") == 0) {
+        	} else if (strcmp(token, "TOP") == 0) {
             	action = 2;
-        	}
-        	else if (strcmp(token, "RIGHT") == 0) {
+        	} else if (strcmp(token, "RIGHT") == 0) {
             	action = 3;
-			}
-        	else if (strcmp(token, "BOTTOM") == 0) {
+			} else /*if (strcmp(token, "BOTTOM") == 0)*/ {
             	action = 4;
 			}
 
