@@ -2,7 +2,7 @@
  * commSTM.c
  *
  *  Created on: May 13, 2025
- *      Author: maxch
+ *      Author: Modelec
  */
 
 #include "CommCallbacks.h"

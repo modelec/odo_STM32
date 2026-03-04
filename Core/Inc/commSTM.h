@@ -2,7 +2,7 @@
  * commSTM.h
  *
  *  Created on: May 13, 2025
- *      Author: maxch
+ *      Author: Modelec
  */
 
 #ifndef INC_COMMSTM_H_
