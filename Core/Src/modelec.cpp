@@ -41,10 +41,10 @@ void DiffBot::stop(bool stop) {
 }
 
 void DiffBot::setup() {
-	pidLeft = PID(1, 0.0, 0.0, -PWM_MAX, PWM_MAX);
-	pidRight = PID(1, 0.0, 0.0, -PWM_MAX, PWM_MAX);
-	pidPos = PID(1, 0.0, 0.0, -V_MAX, V_MAX);
-	pidTheta = PID(2, 0.0, 0.0, -M_PI, M_PI);
+	pidLeft = PID(2, 0, 0.5, -PWM_MAX, PWM_MAX);
+	pidRight = PID(2, 0, 0.5, -PWM_MAX, PWM_MAX);
+	pidPos = PID(3, -0.2, 1.0, -V_MAX, V_MAX);
+	pidTheta = PID(6, 0.5, 0.5, -M_PI, M_PI);
 
 	prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
 	prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
@@ -66,7 +66,14 @@ void DiffBot::update(float dt) {
         	else if (isDelayPassedFrom(notMovedMaxTime, publishNotMoved)) {
         		motor.stop(true);
 
-        		targets[index].active = false;
+        		if (targets[index].active)
+        		{
+        			char log[64];
+        			sprintf(log, "SET;WAYPOINT;REACH;%d\n", index);
+        			CDC_Transmit_FS((uint8_t*)log, strlen(log));
+
+        			targets[index].active = false;
+        		}
 
     			no_move = false;
 
@@ -146,7 +153,7 @@ void DiffBot::update(float dt) {
     switch (targets[index].state) {
     case FINAL:
 
-    	if (std::fabs(dx) <= precisePosFinal && std::fabs(dy) <= precisePosFinal && std::fabs(targets[index].theta - pos.theta) < preciseAngle) {
+    	if (std::fabs(dx) <= precisePosFinal && std::fabs(dy) <= precisePosFinal && std::fabs(targets[index].theta - pos.theta) < preciseAngleFinal) {
     		targets[index].active = false;
     		motor.stop(true);
 
@@ -202,7 +209,7 @@ void DiffBot::update(float dt) {
 		angleError > 0 ? angleError -= M_PI : angleError += M_PI;
 	}
 
-	if (std::fabs(angleError) <= precisePosFinal) angleError = 0;
+	if (std::fabs(angleError) <= preciseAngle) angleError = 0;
 
 	float distError = dist * cosf(angleError);
 
