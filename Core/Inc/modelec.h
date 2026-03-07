@@ -75,7 +75,7 @@ public:
 
 	float readEncoderLeft();
 
-	DiffBot(Point pos, float dt);
+	DiffBot(Point pos);
 
 	void stop(bool stop);
 

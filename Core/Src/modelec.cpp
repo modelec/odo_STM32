@@ -48,7 +48,7 @@ float DiffBot::readEncoderRight()
     return distance / dt;
 }
 
-DiffBot::DiffBot(Point pos, float dt) : pos(pos), dt(dt)
+DiffBot::DiffBot(Point pos) : pos(pos)
 {
 };
 
@@ -73,7 +73,11 @@ void DiffBot::update(float dt_actual)
 {
     this->dt = dt_actual;
 
-    if (!isDelayPassed(dt * 1000)) return;
+    if (!isDelayPassed(dt * 1000))
+    {
+        motor.update();
+        return;
+    }
 
     float rightVel = readEncoderRight();
     float leftVel = readEncoderLeft();
@@ -88,8 +92,8 @@ void DiffBot::update(float dt_actual)
     pos.y += dDistance * sinf(avgTheta);
     pos.theta = normalizeAngle(pos.theta + dTheta);
 
-    if (std::abs(rightVel) < 0.001f && std::abs(leftVel) < 0.001f &&
-        (std::abs(motor.rightTarget_PWM) > 50 || std::abs(motor.leftTarget_PWM) > 50))
+    if (std::abs(rightVel) < 0.0005f && std::abs(leftVel) < 0.0005f &&
+        (std::abs(motor.rightTarget_PWM) > 0 || std::abs(motor.leftTarget_PWM) > 0))
     {
         if (!no_move)
         {
@@ -154,6 +158,10 @@ void DiffBot::update(float dt_actual)
             wRef = pidTheta.compute(0, -finalAngleErr, dt);
 
         } else {
+            char log[64];
+            int len = snprintf(log, sizeof(log), "SET;WAYPOINT;REACH;%d\n", index);
+            CDC_Transmit_FS((uint8_t*)log, len);
+
             targets[index].active = false;
             index = (index + 1) % MAX_WAYPOINTS;
             resetPID();

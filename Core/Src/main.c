@@ -111,7 +111,7 @@ int main(void)
   while (1)
   {
 
-	  ModelecOdometryLoop(0.01f);
+	  ModelecOdometryLoop();
 
     /* USER CODE END WHILE */
 

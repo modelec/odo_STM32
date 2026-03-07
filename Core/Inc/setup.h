@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
 void ModelecOdometrySetup();
-void ModelecOdometryLoop(float dt);
+void ModelecOdometryLoop();
 
 #ifdef __cplusplus
 }
