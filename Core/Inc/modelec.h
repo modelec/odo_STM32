@@ -63,7 +63,8 @@ public:
 
 	float preciseAngleFinal = 0.017f;
 	float preciseAngle = 0.39f;
-	float precisePosFinal = 0.01f;
+	float precisePosFinal = 0.001f;
+	float precisePos2 = 0.02f;
 	float precisePos = 0.1f;
 
 	static bool isDelayPassedFrom(uint32_t delay, uint32_t& lastTick);
@@ -80,7 +81,7 @@ public:
 
 	void setup();
 
-    void update(float dt);
+    void update(float dt_actual);
 
     void addTarget(int id, int type, float x, float y, float theta);
 
