@@ -141,8 +141,10 @@ void DiffBot::update(float dt_actual)
 
     bool isAtPoint = (dist < (targets[index].state == FINAL ? precisePosFinal : precisePos));
 
-    if (isAtPoint) {
+    if (isAtPoint || targets[index].isAtPosition) {
         if (targets[index].state == FINAL) {
+            targets[index].isAtPosition = true;
+
             float finalAngleErr = normalizeAngle(targets[index].theta - pos.theta);
 
             if (std::fabs(finalAngleErr) <= preciseAngleFinal) {

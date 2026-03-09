@@ -25,8 +25,9 @@ public:
     float y;
     float theta;
     bool active;
+    bool isAtPosition;
 
-    Point(uint8_t id = 0, StatePoint state = StatePoint::INTERMEDIAIRE, float x = 0.0, float y = 0.0, float theta = 0.0, bool active = false);
+    Point(uint8_t id = 0, StatePoint state = StatePoint::INTERMEDIAIRE, float x = 0.0, float y = 0.0, float theta = 0.0, bool active = false, bool isAtPosition = false);
 };
 
 #endif /* INC_POINT_H_ */
