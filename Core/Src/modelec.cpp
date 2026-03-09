@@ -48,7 +48,7 @@ float DiffBot::readEncoderRight()
     return distance / dt;
 }
 
-DiffBot::DiffBot(Point pos) : pos(pos)
+DiffBot::DiffBot(Point pos) : pos(pos), dt(0)
 {
 };
 
@@ -60,10 +60,10 @@ void DiffBot::stop(bool stop)
 
 void DiffBot::setup()
 {
-    pidLeft = PID(2.5f, 0.1f, 0.0f, -PWM_MAX, PWM_MAX);
-    pidRight = PID(2.5f, 0.1f, 0.0f, -PWM_MAX, PWM_MAX);
-    pidPos = PID(3.0f, 0.0f, 0.01f, -V_MAX, V_MAX);
-    pidTheta = PID(5.0f, 0.0f, 0.01f, -M_PI, M_PI);
+    pidLeft = PID(4.f, 0.1f, 0.f, -PWM_MAX, PWM_MAX);
+    pidRight = PID(4.f, 0.1f, 0.f, -PWM_MAX, PWM_MAX);
+    pidPos = PID(6.0f, 0.0f, 0.1f, -V_MAX, V_MAX);
+    pidTheta = PID(10.0f, 0.0f, 0.1f, -M_PI, M_PI);
 
     prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
     prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
@@ -92,7 +92,7 @@ void DiffBot::update(float dt_actual)
     pos.y += dDistance * sinf(avgTheta);
     pos.theta = normalizeAngle(pos.theta + dTheta);
 
-    if (std::abs(rightVel) < 0.0005f && std::abs(leftVel) < 0.0005f &&
+    if (std::abs(rightVel) == 0.0f && std::abs(leftVel) == 0.0f &&
         (std::abs(motor.rightTarget_PWM) > 0 || std::abs(motor.leftTarget_PWM) > 0))
     {
         if (!no_move)
@@ -102,17 +102,20 @@ void DiffBot::update(float dt_actual)
         }
         else if (HAL_GetTick() - publishNotMoved > notMovedMaxTime)
         {
-            char log[64];
-            int len = snprintf(log, sizeof(log), "SET;WAYPOINT;REACH;%d\n", index);
-            CDC_Transmit_FS((uint8_t*)log, len);
+            /*if (targets[index].active)
+            {
+                char log[64];
+                sprintf(log, "SET;WAYPOINT;REACH;%d\n", index);
+                CDC_Transmit_FS((uint8_t*)log, strlen(log));
 
-            targets[index].active = false;
+                targets[index].active = false;
+            }
 
             index = (index + 1) % MAX_WAYPOINTS;
 
             motor.stop(true);
             resetPID();
-            return;
+            return;*/
         }
     }
     else
@@ -148,7 +151,6 @@ void DiffBot::update(float dt_actual)
                 CDC_Transmit_FS((uint8_t*)log, len);
 
                 targets[index].active = false;
-                index = (index + 1) % MAX_WAYPOINTS;
                 motor.stop(true);
                 resetPID();
                 return;
@@ -197,8 +199,16 @@ void DiffBot::update(float dt_actual)
         return limited;
     };
 
-    motor.leftTarget_PWM = static_cast<int16_t>(applyLimits(pwmLeft));
-    motor.rightTarget_PWM = static_cast<int16_t>(applyLimits(pwmRight));
+    auto applyDeadzone = [&](float pwm) {
+        const float min_pwm = 35.0f;
+        if (std::abs(pwm) < 1.0f) return 0.0f;
+
+        if (pwm > 0) return pwm + min_pwm;
+        else return pwm - min_pwm;
+    };
+
+    motor.leftTarget_PWM = static_cast<int16_t>(applyLimits(applyDeadzone(pwmLeft)));
+    motor.rightTarget_PWM = static_cast<int16_t>(applyLimits(applyDeadzone(pwmRight)));
     motor.update();
 }
 

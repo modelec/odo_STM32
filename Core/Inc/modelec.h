@@ -63,7 +63,7 @@ public:
 
 	float preciseAngleFinal = 0.017f;
 	float preciseAngle = 0.39f;
-	float precisePosFinal = 0.001f;
+	float precisePosFinal = 0.0005f;
 	float precisePos2 = 0.02f;
 	float precisePos = 0.1f;
 
