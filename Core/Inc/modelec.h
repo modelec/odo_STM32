@@ -15,14 +15,15 @@
 #include "pid.h"
 #include "point.h"
 
+#define PWM_MAX 640.0f
+#define V_MAX 0.643f // m/s
+
 #define MAX_WAYPOINTS 16
-#define PWM_MAX 626.0f
 #define ENCODER_RES 2400.0f
-#define WHEEL_DIAMETER 0.082f
+#define WHEEL_DIAMETER 0.081f
 #define WHEEL_RADIUS (WHEEL_DIAMETER/2.0f)
 #define WHEEL_BASE 0.29f
 #define WHEEL_BASE_2 (WHEEL_BASE/2.0f)
-#define V_MAX 0.643f // m/s
 
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim2;
@@ -52,7 +53,7 @@ public:
 	bool arrive = false;
 
 	uint32_t publishNotMoved = 0;
-	uint32_t notMovedMaxTime = 100;
+	uint32_t notMovedMaxTime = 300;
 	bool no_move = false;
 
 	uint8_t action = 0;
@@ -61,11 +62,14 @@ public:
 	uint32_t publishLastTick = 0;
 	uint32_t frequencyPublish = 100;
 
-	float preciseAngleFinal = 0.017f;
+	float preciseAngleFinal = 0.005f;
 	float preciseAngle = 0.39f;
 	float precisePosFinal = 0.001f;
 	float precisePos2 = 0.02f;
-	float precisePos = 0.1f;
+	float precisePos = 0.15f;
+
+	float currentV = 0;
+	const float maxAccel = 0.5f;
 
 	static bool isDelayPassedFrom(uint32_t delay, uint32_t& lastTick);
 

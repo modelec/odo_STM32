@@ -60,10 +60,10 @@ void DiffBot::stop(bool stop)
 
 void DiffBot::setup()
 {
-    pidLeft = PID(4.f, 0.1f, 0.f, -PWM_MAX, PWM_MAX);
-    pidRight = PID(4.f, 0.1f, 0.f, -PWM_MAX, PWM_MAX);
-    pidPos = PID(6.0f, 0.0f, 0.1f, -V_MAX, V_MAX);
-    pidTheta = PID(10.0f, 0.0f, 0.1f, -M_PI, M_PI);
+    pidLeft = PID(5.f, 0.5f, 0.5f, -PWM_MAX, PWM_MAX);
+    pidRight = PID(5.f, 0.5f, 0.5f, -PWM_MAX, PWM_MAX);
+    pidPos = PID(4.0f, 0.0f, 0.0f, -V_MAX, V_MAX);
+    pidTheta = PID(5.0f, 1.0f, 0.0f, -M_PI, M_PI);
 
     prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
     prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
@@ -72,12 +72,6 @@ void DiffBot::setup()
 void DiffBot::update(float dt_actual)
 {
     this->dt = dt_actual;
-
-    if (!isDelayPassed(dt * 1000))
-    {
-        motor.update();
-        return;
-    }
 
     float rightVel = readEncoderRight();
     float leftVel = readEncoderLeft();
@@ -92,6 +86,7 @@ void DiffBot::update(float dt_actual)
     pos.y += dDistance * sinf(avgTheta);
     pos.theta = normalizeAngle(pos.theta + dTheta);
 
+    // TODO : review this part cause do not work.
     if (std::abs(rightVel) == 0.0f && std::abs(leftVel) == 0.0f &&
         (std::abs(motor.rightTarget_PWM) > 0 || std::abs(motor.leftTarget_PWM) > 0))
     {
@@ -186,7 +181,13 @@ void DiffBot::update(float dt_actual)
         float alignmentScale = cosf(angleError);
         if (alignmentScale < 0) alignmentScale = 0;
 
-        vRef = pidPos.compute(0, -dist * direction, dt) * alignmentScale;
+        float targetV = pidPos.compute(0, -dist * direction, dt) * alignmentScale;
+
+        if (targetV > currentV + (maxAccel * dt)) currentV += maxAccel * dt;
+        else if (targetV < currentV - (maxAccel * dt)) currentV -= maxAccel * dt;
+        else currentV = targetV;
+
+        vRef = currentV;
     }
 
     float vLeftReq = vRef - (WHEEL_BASE_2 * wRef);
@@ -224,6 +225,7 @@ void DiffBot::addTarget(int id, int type, float x, float y, float theta)
     if (id <= index) index = 0;
 
     arrive = false;
+    no_move = false;
 }
 
 void DiffBot::resetPID()
