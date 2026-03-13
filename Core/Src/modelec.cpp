@@ -69,57 +69,74 @@ void DiffBot::setup()
     prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
 }
 
+void DiffBot::handleStallCondition()
+{
+    motor.stop(true);
+
+    char log[64];
+    int len = snprintf(log, sizeof(log), "ERR;STALL;WAYPOINT;%d;POS;%.2f;%.2f\n",
+                       index, pos.x, pos.y);
+    CDC_Transmit_FS((uint8_t*)log, len);
+
+    targets[index].active = false;
+    no_move = false;
+    currentV = 0.0f;
+
+    resetPID();
+
+    index = (index + 1) % MAX_WAYPOINTS;
+}
+
+void DiffBot::notifyWaypointReached(int reachedIndex)
+{
+    char log[64];
+    int len = snprintf(log, sizeof(log), "SET;WAYPOINT;REACH;%d\n", reachedIndex);
+    CDC_Transmit_FS((uint8_t*)log, len);
+
+    targets[reachedIndex].active = false;
+    targets[reachedIndex].isAtPosition = false;
+
+    resetPID();
+
+    int nextIndex = (reachedIndex + 1) % MAX_WAYPOINTS;
+    if (targets[nextIndex].active && targets[nextIndex].state != FINAL) {
+        index = nextIndex;
+    } else {
+        motor.stop(true);
+        currentV = 0.0f;
+    }
+}
+
 void DiffBot::update(float dt_actual)
 {
+    if (dt_actual <= 0.0f) return;
     this->dt = dt_actual;
 
-    float rightVel = readEncoderRight();
-    float leftVel = readEncoderLeft();
+    float vLeftAct  = readEncoderLeft();
+    float vRightAct = readEncoderRight();
 
-    float dLeft = leftVel * dt;
-    float dRight = rightVel * dt;
-    float dDistance = (dLeft + dRight) / 2.0f;
-    float dTheta = (dRight - dLeft) / WHEEL_BASE;
+    float dDistance = ((vLeftAct + vRightAct) * 0.5f) * dt;
+    float dTheta    = ((vRightAct - vLeftAct) / WHEEL_BASE) * dt;
 
-    float avgTheta = pos.theta + (dTheta * 0.5f);
-    pos.x += dDistance * cosf(avgTheta);
-    pos.y += dDistance * sinf(avgTheta);
+    float midTheta = pos.theta + (dTheta * 0.5f);
+    pos.x += dDistance * cosf(midTheta);
+    pos.y += dDistance * sinf(midTheta);
     pos.theta = normalizeAngle(pos.theta + dTheta);
 
-    // TODO : review this part cause do not work.
-    if (std::abs(rightVel) == 0.0f && std::abs(leftVel) == 0.0f &&
-        (std::abs(motor.rightTarget_PWM) > 0 || std::abs(motor.leftTarget_PWM) > 0))
-    {
+    bool commandingMove = (std::abs(motor.leftTarget_PWM) > 50 || std::abs(motor.rightTarget_PWM) > 50);
+    bool isStationary   = (std::abs(vLeftAct) < 0.01f && std::abs(vRightAct) < 0.01f);
+
+    if (commandingMove && isStationary) {
         if (!no_move)
         {
-            no_move = true;
-            publishNotMoved = HAL_GetTick();
+            no_move = true; publishNotMoved = HAL_GetTick();
         }
-        else if (HAL_GetTick() - publishNotMoved > notMovedMaxTime)
-        {
-            /*if (targets[index].active)
-            {
-                char log[64];
-                sprintf(log, "SET;WAYPOINT;REACH;%d\n", index);
-                CDC_Transmit_FS((uint8_t*)log, strlen(log));
-
-                targets[index].active = false;
-            }
-
-            index = (index + 1) % MAX_WAYPOINTS;
-
-            motor.stop(true);
-            resetPID();
-            return;*/
+        else if (HAL_GetTick() - publishNotMoved > notMovedMaxTime) {
+            handleStallCondition();
+            return;
         }
-    }
-    else
-    {
+    } else {
         no_move = false;
-    }
-
-    if (odo_active && isDelayPassedFrom(frequencyPublish, publishLastTick)) {
-        publishStatus();
     }
 
     if (!odo_active || !targets[index].active) {
@@ -134,85 +151,67 @@ void DiffBot::update(float dt_actual)
     float vRef = 0.0f;
     float wRef = 0.0f;
 
-    bool isAtPoint = (dist < (targets[index].state == FINAL ? precisePosFinal : precisePos));
+    float arrivalThreshold = (targets[index].state == FINAL) ? precisePosFinal : precisePos;
 
-    if (isAtPoint || targets[index].isAtPosition) {
+    if (dist < arrivalThreshold || targets[index].isAtPosition) {
         if (targets[index].state == FINAL) {
             targets[index].isAtPosition = true;
+            float angleErr = normalizeAngle(targets[index].theta - pos.theta);
 
-            float finalAngleErr = normalizeAngle(targets[index].theta - pos.theta);
-
-            if (std::fabs(finalAngleErr) <= preciseAngleFinal) {
-                char log[64];
-                int len = snprintf(log, sizeof(log), "SET;WAYPOINT;REACH;%d\n", index);
-                CDC_Transmit_FS((uint8_t*)log, len);
-
-                targets[index].active = false;
-                motor.stop(true);
-                resetPID();
+            if (std::abs(angleErr) <= preciseAngleFinal) {
+                notifyWaypointReached(index);
                 return;
             }
-
-            vRef = 0;
-            wRef = pidTheta.compute(0, -finalAngleErr, dt);
-
+            wRef = pidTheta.compute(0, -angleErr, dt); // Pivot in place
         } else {
-            char log[64];
-            int len = snprintf(log, sizeof(log), "SET;WAYPOINT;REACH;%d\n", index);
-            CDC_Transmit_FS((uint8_t*)log, len);
-
-            targets[index].active = false;
-            index = (index + 1) % MAX_WAYPOINTS;
-            resetPID();
+            notifyWaypointReached(index);
             return;
         }
     } else {
         float angleTarget = atan2f(dy, dx);
-        float angleError = normalizeAngle(angleTarget - pos.theta);
+        float angleError  = normalizeAngle(angleTarget - pos.theta);
 
         float direction = 1.0f;
-        if (std::fabs(angleError) > static_cast<float>(M_PI) / 2.0f) {
+        if (std::abs(angleError) > (float)M_PI_2) {
             direction = -1.0f;
-            angleError = normalizeAngle(angleError - static_cast<float>(M_PI));
+            angleError = normalizeAngle(angleError - (float)M_PI);
         }
 
         wRef = pidTheta.compute(0, -angleError, dt);
 
-        float alignmentScale = cosf(angleError);
-        if (alignmentScale < 0) alignmentScale = 0;
+        float alignScale = std::max(0.0f, cosf(angleError));
+        float targetV = pidPos.compute(0, -dist * direction, dt) * alignScale;
 
-        float targetV = pidPos.compute(0, -dist * direction, dt) * alignmentScale;
-
-        if (targetV > currentV + (maxAccel * dt)) currentV += maxAccel * dt;
-        else if (targetV < currentV - (maxAccel * dt)) currentV -= maxAccel * dt;
-        else currentV = targetV;
-
+        float maxStep = maxAccel * dt;
+        currentV = std::clamp(targetV, currentV - maxStep, currentV + maxStep);
         vRef = currentV;
     }
 
-    float vLeftReq = vRef - (WHEEL_BASE_2 * wRef);
+    float vLeftReq  = vRef - (WHEEL_BASE_2 * wRef);
     float vRightReq = vRef + (WHEEL_BASE_2 * wRef);
 
-    float pwmLeft = ((vLeftReq / V_MAX) * PWM_MAX) + pidLeft.compute(vLeftReq, leftVel, dt);
-    float pwmRight = ((vRightReq / V_MAX) * PWM_MAX) + pidRight.compute(vRightReq, rightVel, dt);
+    auto computeMotorPWM = [&](float vTarget, float vActual, PID& pid) {
+        if (std::abs(vTarget) < 0.001f && std::abs(vActual) < 0.001f) return 0.0f;
 
-    auto applyLimits = [&](float pwm) {
-        if (std::abs(pwm) < 1.0f) return 0.0f;
-        float limited = std::max(-PWM_MAX, std::min(pwm, PWM_MAX));
-        return limited;
+        float ff = (vTarget / V_MAX) * PWM_MAX;
+        float fb = pid.compute(vTarget, vActual, dt);
+        float total = ff + fb;
+
+        const float deadzone = 35.0f;
+        if (std::abs(total) > 1.0f) {
+            total += (total > 0) ? deadzone : -deadzone;
+        }
+        return std::clamp(total, -PWM_MAX, PWM_MAX);
     };
 
-    auto applyDeadzone = [&](float pwm) {
-        const float min_pwm = 35.0f;
-        if (std::abs(pwm) < 1.0f) return 0.0f;
+    motor.leftTarget_PWM  = (int16_t)computeMotorPWM(vLeftReq, vLeftAct, pidLeft);
+    motor.rightTarget_PWM = (int16_t)computeMotorPWM(vRightReq, vRightAct, pidRight);
 
-        if (pwm > 0) return pwm + min_pwm;
-        else return pwm - min_pwm;
-    };
-
-    motor.leftTarget_PWM = static_cast<int16_t>(applyLimits(applyDeadzone(pwmLeft)));
-    motor.rightTarget_PWM = static_cast<int16_t>(applyLimits(applyDeadzone(pwmRight)));
     motor.update();
+
+    if (isDelayPassedFrom(frequencyPublish, publishLastTick)) {
+        publishStatus();
+    }
 }
 
 void DiffBot::addTarget(int id, int type, float x, float y, float theta)

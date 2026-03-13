@@ -92,6 +92,10 @@ public:
 	void resetPID();
 
 	void publishStatus();
+
+	void handleStallCondition();
+
+	void notifyWaypointReached(int reachedIndex);
 };
 
 #endif // MODELEC_H
