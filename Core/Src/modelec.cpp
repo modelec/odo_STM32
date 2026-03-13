@@ -221,7 +221,7 @@ void DiffBot::addTarget(int id, int type, float x, float y, float theta)
     targets[id] = Point(id, static_cast<StatePoint>(type), x, y, theta);
     targets[id].active = true;
 
-    if (id <= index) index = 0;
+    if (id < index) index = 0;
 
     arrive = false;
     no_move = false;
