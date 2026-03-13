@@ -124,7 +124,7 @@ void DiffBot::update(float dt_actual)
     pos.theta = normalizeAngle(pos.theta + dTheta);
 
     bool commandingMove = (std::abs(motor.leftTarget_PWM) > 50 || std::abs(motor.rightTarget_PWM) > 50);
-    bool isStationary   = (std::abs(vLeftAct) < 0.01f && std::abs(vRightAct) < 0.01f);
+    bool isStationary   = (std::abs(vLeftAct) < 0.001f && std::abs(vRightAct) < 0.001f);
 
     if (commandingMove && isStationary) {
         if (!no_move)
