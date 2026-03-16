@@ -99,7 +99,7 @@ void DiffBot::notifyWaypointReached(int reachedIndex)
     resetPID();
 
     int nextIndex = (reachedIndex + 1) % MAX_WAYPOINTS;
-    if (targets[nextIndex].active && targets[nextIndex].state != FINAL) {
+    if (targets[nextIndex].active && targets[reachedIndex].state != FINAL) {
         index = nextIndex;
     } else {
         motor.stop(true);
