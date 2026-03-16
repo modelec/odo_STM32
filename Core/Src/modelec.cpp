@@ -60,10 +60,10 @@ void DiffBot::stop(bool stop)
 
 void DiffBot::setup()
 {
-    pidLeft = PID(5.f, 0.5f, 0.5f, -PWM_MAX, PWM_MAX);
-    pidRight = PID(5.f, 0.5f, 0.5f, -PWM_MAX, PWM_MAX);
-    pidPos = PID(4.0f, 0.0f, 0.0f, -V_MAX, V_MAX);
-    pidTheta = PID(5.0f, 1.0f, 0.0f, -M_PI, M_PI);
+    pidLeft = PID(4.5f, 2.0f, 2.0f, -PWM_MAX, PWM_MAX);
+    pidRight = PID(4.5f, 2.0f, 2.0f, -PWM_MAX, PWM_MAX);
+    pidPos = PID(3.0f, 0.0f, 0.0f, -V_MAX, V_MAX);
+    pidTheta = PID(13.0f, 0.0f, 0.0f, -M_PI, M_PI);
 
     prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
     prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
@@ -74,7 +74,7 @@ void DiffBot::handleStallCondition()
     motor.stop(true);
 
     char log[64];
-    int len = snprintf(log, sizeof(log), "ERR;STALL;WAYPOINT;%d;POS;%.2f;%.2f\n",
+    int len = snprintf(log, sizeof(log), "SET;WAYPOINT;REACH;%d;POS;%.2f;%.2f\n",
                        index, pos.x, pos.y);
     CDC_Transmit_FS((uint8_t*)log, len);
 
@@ -137,6 +137,10 @@ void DiffBot::update(float dt_actual)
         }
     } else {
         no_move = false;
+    }
+
+    if (odo_active && isDelayPassedFrom(frequencyPublish, publishLastTick)) {
+        publishStatus();
     }
 
     if (!odo_active || !targets[index].active) {
@@ -208,10 +212,6 @@ void DiffBot::update(float dt_actual)
     motor.rightTarget_PWM = (int16_t)computeMotorPWM(vRightReq, vRightAct, pidRight);
 
     motor.update();
-
-    if (isDelayPassedFrom(frequencyPublish, publishLastTick)) {
-        publishStatus();
-    }
 }
 
 void DiffBot::addTarget(int id, int type, float x, float y, float theta)

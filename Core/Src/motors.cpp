@@ -16,8 +16,8 @@ void Motor::update() {
 
     int16_t max_step = 10;
 
-    leftTarget_PWM  = std::max(-PWM_MAX, std::min(leftTarget_PWM,  PWM_MAX));
-    rightTarget_PWM = std::max(-PWM_MAX, std::min(rightTarget_PWM, PWM_MAX));
+    leftTarget_PWM  = std::max(-PWM_MAX, std::min((float)leftTarget_PWM,  PWM_MAX));
+    rightTarget_PWM = std::max(-PWM_MAX, std::min((float)rightTarget_PWM, PWM_MAX));
 
 	leftCurrent_PWM  = approach(leftCurrent_PWM,  leftTarget_PWM,  max_step);
 	rightCurrent_PWM = approach(rightCurrent_PWM, rightTarget_PWM, max_step);
