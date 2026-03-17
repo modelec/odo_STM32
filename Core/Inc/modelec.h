@@ -17,6 +17,7 @@
 
 #define PWM_MAX 640.0f
 #define V_MAX 0.643f // m/s
+#define A_MAX 10.0f // m/s^2 huge value cause idk what to put there
 
 #define MAX_WAYPOINTS 16
 #define ENCODER_RES 2400.0f
@@ -69,7 +70,7 @@ public:
 	float precisePos = 0.15f;
 
 	float currentV = 0;
-	const float maxAccel = 0.5f;
+	const float maxAccel = A_MAX;
 
 	static bool isDelayPassedFrom(uint32_t delay, uint32_t& lastTick);
 

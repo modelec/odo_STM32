@@ -60,10 +60,10 @@ void DiffBot::stop(bool stop)
 
 void DiffBot::setup()
 {
-    pidLeft = PID(4.5f, 2.0f, 2.0f, -PWM_MAX, PWM_MAX);
-    pidRight = PID(4.5f, 2.0f, 2.0f, -PWM_MAX, PWM_MAX);
-    pidPos = PID(3.0f, 0.0f, 0.0f, -V_MAX, V_MAX);
-    pidTheta = PID(13.0f, 0.0f, 0.0f, -M_PI, M_PI);
+    pidLeft = PID(5.0f, 0.0f, 0.0f, -PWM_MAX, PWM_MAX);
+    pidRight = PID(5.0f, 0.0f, 0.0f, -PWM_MAX, PWM_MAX);
+    pidPos = PID(3.5f, 0.0f, 0.0f, -V_MAX, V_MAX);
+    pidTheta = PID(11.0f, 0.0f, 0.0f, -M_PI, M_PI);
 
     prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
     prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
@@ -182,7 +182,6 @@ void DiffBot::update(float dt_actual)
         }
 
         wRef = pidTheta.compute(0, -angleError, dt);
-
         float alignScale = std::max(0.0f, cosf(angleError));
         float targetV = pidPos.compute(0, -dist * direction, dt) * alignScale;
 
