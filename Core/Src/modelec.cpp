@@ -60,10 +60,10 @@ void DiffBot::stop(bool stop)
 
 void DiffBot::setup()
 {
-    pidLeft = PID(5.0f, 0.0f, 0.0f, -PWM_MAX, PWM_MAX);
-    pidRight = PID(5.0f, 0.0f, 0.0f, -PWM_MAX, PWM_MAX);
-    pidPos = PID(3.5f, 0.0f, 0.0f, -V_MAX, V_MAX);
-    pidTheta = PID(11.0f, 0.0f, 0.0f, -M_PI, M_PI);
+    pidLeft = PID(7.0f, 0.0f, 0.0f, -PWM_MAX, PWM_MAX);
+    pidRight = PID(7.0f, 0.0f, 0.0f, -PWM_MAX, PWM_MAX);
+    pidPos = PID(6.0f, 0.2f, 0.02f, -V_MAX, V_MAX);
+    pidTheta = PID(15.0f, 0.2f, 0.02f, -M_PI, M_PI);
 
     prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
     prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);

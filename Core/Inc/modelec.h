@@ -61,7 +61,7 @@ public:
 
 	uint32_t lastTick = 0;
 	uint32_t publishLastTick = 0;
-	uint32_t frequencyPublish = 100;
+	uint32_t frequencyPublish = 300;
 
 	float preciseAngleFinal = 0.005f;
 	float preciseAngle = 0.39f;
