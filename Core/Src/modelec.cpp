@@ -21,11 +21,6 @@ bool DiffBot::isDelayPassedFrom(uint32_t delay, uint32_t& lastTick)
     return false;
 }
 
-bool DiffBot::isDelayPassed(uint32_t delay)
-{
-    return isDelayPassedFrom(delay, lastTick);
-}
-
 float DiffBot::readEncoderLeft()
 {
     int16_t count = (int16_t)__HAL_TIM_GET_COUNTER(&htim2);
@@ -60,10 +55,12 @@ void DiffBot::stop(bool stop)
 
 void DiffBot::setup()
 {
-    pidLeft = PID(7.0f, 0.0f, 0.0f, -PWM_MAX, PWM_MAX);
-    pidRight = PID(7.0f, 0.0f, 0.0f, -PWM_MAX, PWM_MAX);
-    pidPos = PID(6.0f, 0.2f, 0.02f, -V_MAX, V_MAX);
-    pidTheta = PID(15.0f, 0.2f, 0.02f, -M_PI, M_PI);
+    pidLeft  = PID(45.0f, 2.0f, 0.5f, -PWM_MAX, PWM_MAX);
+    pidRight = PID(45.0f, 2.0f, 0.5f, -PWM_MAX, PWM_MAX);
+
+    pidPos   = PID(40.0f, 0.5f, 0.0f, -V_MAX, V_MAX);
+
+    pidTheta = PID(120.0f, 0.0f, 0.1f, -M_PI, M_PI);
 
     prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
     prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
@@ -165,7 +162,7 @@ void DiffBot::update(float dt_actual)
                 notifyWaypointReached(index);
                 return;
             }
-            wRef = pidTheta.compute(0, -angleErr, dt); // Pivot in place
+            wRef = pidTheta.compute(0, -angleErr, dt);
         } else {
             notifyWaypointReached(index);
             return;
@@ -184,7 +181,9 @@ void DiffBot::update(float dt_actual)
         float alignScale = std::max(0.0f, cosf(angleError));
         float targetV = pidPos.compute(0, -dist * direction, dt) * alignScale;
 
-        float maxStep = maxAccel * dt;
+        float accelLimit = (std::abs(targetV) < std::abs(currentV)) ? maxAccel * 2.0f : maxAccel;
+        float maxStep = accelLimit * dt;
+
         currentV = std::clamp(targetV, currentV - maxStep, currentV + maxStep);
         vRef = currentV;
     }
@@ -199,11 +198,11 @@ void DiffBot::update(float dt_actual)
         float fb = pid.compute(vTarget, vActual, dt);
         float total = ff + fb;
 
-        const float deadzone = 35.0f;
+        const float deadzone = 40.0f;
         if (std::abs(total) > 1.0f) {
             total += (total > 0) ? deadzone : -deadzone;
         }
-        return std::clamp(total, -PWM_MAX, PWM_MAX);
+        return std::clamp(total, (float)-PWM_MAX, (float)PWM_MAX);
     };
 
     motor.leftTarget_PWM  = (int16_t)computeMotorPWM(vLeftReq, vLeftAct, pidLeft);

@@ -8,7 +8,8 @@
 #include <setup.h>
 #include <modelec.h>
 #include "commSTM.h"
-#include "tim.h"
+
+extern TIM_HandleTypeDef htim6;
 
 DiffBot bot = DiffBot(Point());
 
