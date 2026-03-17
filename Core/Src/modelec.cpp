@@ -74,8 +74,7 @@ void DiffBot::handleStallCondition()
     motor.stop(true);
 
     char log[64];
-    int len = snprintf(log, sizeof(log), "SET;WAYPOINT;REACH;%d;POS;%.2f;%.2f\n",
-                       index, pos.x, pos.y);
+    int len = snprintf(log, sizeof(log), "SET;WAYPOINT;REACH;%d\n", index);
     CDC_Transmit_FS((uint8_t*)log, len);
 
     targets[index].active = false;
@@ -116,17 +115,17 @@ void DiffBot::update(float dt_actual)
     float vRightAct = readEncoderRight();
 
     float dDistance = ((vLeftAct + vRightAct) * 0.5f) * dt;
-    float dTheta    = ((vRightAct - vLeftAct) / WHEEL_BASE) * dt;
+    float dTheta = ((vRightAct - vLeftAct) / WHEEL_BASE) * dt;
 
     float midTheta = pos.theta + (dTheta * 0.5f);
     pos.x += dDistance * cosf(midTheta);
     pos.y += dDistance * sinf(midTheta);
     pos.theta = normalizeAngle(pos.theta + dTheta);
 
-    bool commandingMove = (std::abs(motor.leftTarget_PWM) > 50 || std::abs(motor.rightTarget_PWM) > 50);
-    bool isStationary   = (std::abs(vLeftAct) < 0.001f && std::abs(vRightAct) < 0.001f);
+    // bool commandingMove = (std::abs(motor.leftTarget_PWM) > 50 || std::abs(motor.rightTarget_PWM) > 50);
+    // bool isStationary = (std::abs(vLeftAct) == 0.0f && std::abs(vRightAct) == 0.0f);
 
-    if (commandingMove && isStationary) {
+    /*if (commandingMove && isStationary) {
         if (!no_move)
         {
             no_move = true; publishNotMoved = HAL_GetTick();
@@ -137,7 +136,7 @@ void DiffBot::update(float dt_actual)
         }
     } else {
         no_move = false;
-    }
+    }*/
 
     if (odo_active && isDelayPassedFrom(frequencyPublish, publishLastTick)) {
         publishStatus();

@@ -14,7 +14,7 @@ float approach(float current, float target, float step) {
 
 void Motor::update() {
 
-    int16_t max_step = 20;
+    int16_t max_step = 10;
 
     leftTarget_PWM  = std::max(-PWM_MAX, std::min((float)leftTarget_PWM,  PWM_MAX));
     rightTarget_PWM = std::max(-PWM_MAX, std::min((float)rightTarget_PWM, PWM_MAX));

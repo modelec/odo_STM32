@@ -8,23 +8,39 @@
 #include <setup.h>
 #include <modelec.h>
 #include "commSTM.h"
+#include "tim.h"
 
 DiffBot bot = DiffBot(Point());
 
+uint32_t lastUs = 0;
+
 void ModelecOdometrySetup() {
-	bot.setup();
+    HAL_TIM_Base_Start(&htim6);
+
+    lastUs = __HAL_TIM_GET_COUNTER(&htim6);
+
+    bot.setup();
 }
 
-uint32_t lastTick = 0;
-
 void ModelecOdometryLoop() {
-	uint32_t currentTick = HAL_GetTick();
-	float actualDt = (currentTick - lastTick) / 1000.0f;
+    uint32_t currentUs = __HAL_TIM_GET_COUNTER(&htim6);
+    uint32_t diffUs;
 
-	if (actualDt <= 0.0f) return;
+    if (currentUs >= lastUs) {
+        diffUs = currentUs - lastUs;
+    } else {
+        diffUs = (65535 - lastUs) + currentUs + 1;
+    }
 
-	USB_Comm_Process();
-	bot.update(actualDt);
+    float actualDt = diffUs / 1000000.0f;
 
-	lastTick = currentTick;
+    if (actualDt <= 0.0001f || actualDt > 0.1f) {
+        if (actualDt > 0.1f) lastUs = currentUs;
+        return;
+    }
+
+    USB_Comm_Process();
+    bot.update(actualDt);
+
+    lastUs = currentUs;
 }
