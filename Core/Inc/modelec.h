@@ -21,7 +21,7 @@
 
 #define MAX_WAYPOINTS 16
 #define ENCODER_RES 2400.0f
-#define WHEEL_DIAMETER 0.081f
+#define WHEEL_DIAMETER 0.0815f
 #define WHEEL_RADIUS (WHEEL_DIAMETER/2.0f)
 #define WHEEL_BASE 0.29f
 #define WHEEL_BASE_2 (WHEEL_BASE/2.0f)
@@ -63,7 +63,7 @@ public:
 	uint32_t publishLastTick = 0;
 	uint32_t frequencyPublish = 300;
 
-	float preciseAngleFinal = 0.005f;
+	float preciseAngleFinal = 0.001f;
 	float preciseAngle = 0.39f;
 	float precisePosFinal = 0.001f;
 	float precisePos2 = 0.02f;

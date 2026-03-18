@@ -28,8 +28,7 @@ float DiffBot::readEncoderLeft()
     prevCountLeft = count;
 
     float revs = static_cast<float>(diff) / ENCODER_RES;
-    float distance = (2.0f * (float)M_PI * WHEEL_RADIUS * revs);
-    return distance / dt;
+    return (2.0f * (float)M_PI * WHEEL_RADIUS * revs);
 }
 
 float DiffBot::readEncoderRight()
@@ -39,8 +38,7 @@ float DiffBot::readEncoderRight()
     prevCountRight = count;
 
     float revs = static_cast<float>(diff) / ENCODER_RES;
-    float distance = (2.0f * (float)M_PI * WHEEL_RADIUS * revs);
-    return distance / dt;
+    return (2.0f * (float)M_PI * WHEEL_RADIUS * revs);
 }
 
 DiffBot::DiffBot(Point pos) : pos(pos), dt(0)
@@ -55,12 +53,12 @@ void DiffBot::stop(bool stop)
 
 void DiffBot::setup()
 {
-    pidLeft  = PID(45.0f, 2.0f, 0.5f, -PWM_MAX, PWM_MAX);
-    pidRight = PID(45.0f, 2.0f, 0.5f, -PWM_MAX, PWM_MAX);
+    pidLeft  = PID(7.0f, 0.0f, 0.5f, -PWM_MAX, PWM_MAX);
+    pidRight = PID(7.0f, 0.0f, 0.5f, -PWM_MAX, PWM_MAX);
 
-    pidPos   = PID(40.0f, 0.5f, 0.0f, -V_MAX, V_MAX);
+    pidPos   = PID(5.0f, 0.0f, 0.0f, -V_MAX, V_MAX);
 
-    pidTheta = PID(120.0f, 0.0f, 0.1f, -M_PI, M_PI);
+    pidTheta = PID(8.0f, 0.0f, 0.0f, -M_PI, M_PI);
 
     prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
     prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
@@ -108,24 +106,25 @@ void DiffBot::update(float dt_actual)
     if (dt_actual <= 0.0f) return;
     this->dt = dt_actual;
 
-    float vLeftAct  = readEncoderLeft();
-    float vRightAct = readEncoderRight();
+    float distLeftAct  = readEncoderLeft();
+    float distRightAct = readEncoderRight();
 
-    float dDistance = ((vLeftAct + vRightAct) * 0.5f) * dt;
-    float dTheta = ((vRightAct - vLeftAct) / WHEEL_BASE) * dt;
+    float dDistance = ((distLeftAct + distRightAct) * 0.5f);
+    float dTheta = ((distRightAct - distLeftAct) / WHEEL_BASE);
 
     float midTheta = pos.theta + (dTheta * 0.5f);
     pos.x += dDistance * cosf(midTheta);
     pos.y += dDistance * sinf(midTheta);
     pos.theta = normalizeAngle(pos.theta + dTheta);
 
-    // bool commandingMove = (std::abs(motor.leftTarget_PWM) > 50 || std::abs(motor.rightTarget_PWM) > 50);
-    // bool isStationary = (std::abs(vLeftAct) == 0.0f && std::abs(vRightAct) == 0.0f);
+    bool commandingMove = (std::abs(motor.leftTarget_PWM) > 50 || std::abs(motor.rightTarget_PWM) > 50);
+    bool isStationary = (std::abs(distLeftAct) == 0.0f && std::abs(distRightAct) == 0.0f);
 
-    /*if (commandingMove && isStationary) {
+    if (commandingMove && isStationary) {
         if (!no_move)
         {
-            no_move = true; publishNotMoved = HAL_GetTick();
+            no_move = true;
+            publishNotMoved = HAL_GetTick();
         }
         else if (HAL_GetTick() - publishNotMoved > notMovedMaxTime) {
             handleStallCondition();
@@ -133,7 +132,7 @@ void DiffBot::update(float dt_actual)
         }
     } else {
         no_move = false;
-    }*/
+    }
 
     if (odo_active && isDelayPassedFrom(frequencyPublish, publishLastTick)) {
         publishStatus();
@@ -179,7 +178,7 @@ void DiffBot::update(float dt_actual)
 
         wRef = pidTheta.compute(0, -angleError, dt);
         float alignScale = std::max(0.0f, cosf(angleError));
-        float targetV = pidPos.compute(0, -dist * direction, dt) * alignScale;
+        float targetV = pidPos.compute(0, -dist * cosf(angleError) * direction, dt) * alignScale;
 
         float accelLimit = (std::abs(targetV) < std::abs(currentV)) ? maxAccel * 2.0f : maxAccel;
         float maxStep = accelLimit * dt;
@@ -205,8 +204,8 @@ void DiffBot::update(float dt_actual)
         return std::clamp(total, (float)-PWM_MAX, (float)PWM_MAX);
     };
 
-    motor.leftTarget_PWM  = (int16_t)computeMotorPWM(vLeftReq, vLeftAct, pidLeft);
-    motor.rightTarget_PWM = (int16_t)computeMotorPWM(vRightReq, vRightAct, pidRight);
+    motor.leftTarget_PWM  = (int16_t)computeMotorPWM(vLeftReq, distLeftAct/dt, pidLeft);
+    motor.rightTarget_PWM = (int16_t)computeMotorPWM(vRightReq, distRightAct/dt, pidRight);
 
     motor.update();
 }
