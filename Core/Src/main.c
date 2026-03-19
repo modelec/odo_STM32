@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
 #include "tim.h"
 #include "usb_device.h"
 #include "gpio.h"
@@ -93,6 +94,7 @@ int main(void)
   MX_USB_Device_Init();
   MX_TIM8_Init();
   MX_TIM6_Init();
+  MX_ADC2_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1); // IN1A

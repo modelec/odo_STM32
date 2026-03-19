@@ -54,18 +54,17 @@ public:
 	bool arrive = false;
 
 	uint32_t publishNotMoved = 0;
-	uint32_t notMovedMaxTime = 300;
+	uint32_t notMovedMaxTime = 1000;
 	bool no_move = false;
 
 	uint8_t action = 0;
 
-	uint32_t lastTick = 0;
 	uint32_t publishLastTick = 0;
 	uint32_t frequencyPublish = 300;
 
 	float preciseAngleFinal = 0.002f;
 	float preciseAngle = 0.39f;
-	float precisePosFinal = 0.005f;
+	float precisePosFinal = 0.001f;
 	float precisePos2 = 0.02f;
 	float precisePos = 0.15f;
 
@@ -73,8 +72,6 @@ public:
 	const float maxAccel = A_MAX;
 
 	static bool isDelayPassedFrom(uint32_t delay, uint32_t& lastTick);
-
-	bool isDelayPassed(uint32_t delay);
 
 	float readEncoderRight();
 
