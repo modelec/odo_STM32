@@ -56,6 +56,11 @@ void Motor::stop(bool stop) {
         leftCurrent_PWM = 0;
         rightCurrent_PWM = 0;
 
+		TIM1->CCR1 = 0;
+		TIM1->CCR2 = 0;
+		TIM8->CCR1 = 0;
+		TIM8->CCR2 = 0;
+
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
     } else {
