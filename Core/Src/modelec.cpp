@@ -53,12 +53,12 @@ void DiffBot::stop(bool stop)
 
 void DiffBot::setup()
 {
-    pidLeft  = PID(15.0f, 0.0f, 0.5f, -PWM_MAX, PWM_MAX);
-    pidRight = PID(15.0f, 0.0f, 0.5f, -PWM_MAX, PWM_MAX);
+    pidLeft  = PID(30.0f, 0.0f, 0.5f, -PWM_MAX, PWM_MAX);
+    pidRight = PID(30.0f, 0.0f, 0.5f, -PWM_MAX, PWM_MAX);
 
     pidPos   = PID(10.0f, 0.0f, 0.0f, -V_MAX, V_MAX);
 
-    pidTheta = PID(20.0f, 0.0f, 0.0f, -M_PI, M_PI);
+    pidTheta = PID(15.0f, 0.0f, 0.0f, -M_PI, M_PI);
 
     prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
     prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
@@ -69,7 +69,7 @@ void DiffBot::handleStallCondition()
     motor.stop(true);
 
     char log[64];
-    int len = snprintf(log, sizeof(log), "SET;WAYPOINT;REACH;%d\n", index);
+    int len = snprintf(log, sizeof(log), "SET;WAYPOINT;REACH;%d;1\n", index);
     CDC_Transmit_FS((uint8_t*)log, len);
 
     targets[index].active = false;
@@ -201,6 +201,12 @@ void DiffBot::update(float dt_actual)
         if (std::abs(total) > 1.0f) {
             total += (total > 0) ? deadzone : -deadzone;
         }
+
+        const float min_output = 60.0f;
+        if (std::abs(total) < min_output && std::abs(vTarget) > 0.01f) {
+            total = (total > 0) ? min_output : -min_output;
+        }
+
         return std::clamp(total, (float)-PWM_MAX, (float)PWM_MAX);
     };
 
@@ -218,6 +224,8 @@ void DiffBot::addTarget(int id, int type, float x, float y, float theta)
     targets[id].active = true;
 
     if (id < index) index = 0;
+
+    motor.stop(false);
 
     arrive = false;
     no_move = false;
