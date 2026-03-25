@@ -65,7 +65,7 @@ public:
 	float preciseAngleFinal = 0.002f;
 	float preciseAngle = 0.39f;
 	float precisePosFinal = 0.001f;
-	float precisePos = 0.15f;
+	float precisePos = 0.05f;
 
 	float currentV = 0;
 	const float maxAccel = A_MAX;

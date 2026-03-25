@@ -58,7 +58,7 @@ void DiffBot::setup()
 
     pidPos   = PID(10.0f, 0.0f, 0.0f, -V_MAX, V_MAX);
 
-    pidTheta = PID(15.0f, 0.0f, 0.0f, -M_PI, M_PI);
+    pidTheta = PID(14.0f, 0.0f, 0.2f, -M_PI, M_PI);
 
     prevCountLeft = __HAL_TIM_GET_COUNTER(&htim2);
     prevCountRight = __HAL_TIM_GET_COUNTER(&htim3);
@@ -186,6 +186,14 @@ void DiffBot::update(float dt_actual)
         currentV = std::clamp(targetV, currentV - maxStep, currentV + maxStep);
         vRef = currentV;
     }
+
+    float wContribution = std::abs(WHEEL_BASE_2 * wRef);
+
+    float availableV = V_MAX - wContribution;
+
+    if (availableV < 0) availableV = 0;
+
+    vRef = std::clamp(vRef, -availableV, availableV);
 
     float vLeftReq  = vRef - (WHEEL_BASE_2 * wRef);
     float vRightReq = vRef + (WHEEL_BASE_2 * wRef);
