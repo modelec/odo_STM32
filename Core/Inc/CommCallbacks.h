@@ -19,7 +19,7 @@ bool Comm_SetPID(char *pid_name, float p, float i, float d, float out_min, float
 
 void Comm_StartOdometry(bool start);
 
-void Comm_AddWaypoint(int id, int type, float x, float y, float t);
+void Comm_AddWaypoint(int id, int type, float x, float y, float t, bool only_rotate);
 
 float Comm_GetDistance(int sensorId);
 

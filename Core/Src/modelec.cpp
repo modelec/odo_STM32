@@ -224,12 +224,16 @@ void DiffBot::update(float dt_actual)
     motor.update();
 }
 
-void DiffBot::addTarget(int id, int type, float x, float y, float theta)
+void DiffBot::addTarget(int id, int type, float x, float y, float theta, bool only_rotate)
 {
     if (id >= MAX_WAYPOINTS) return;
 
     targets[id] = Point(id, static_cast<StatePoint>(type), x, y, theta);
     targets[id].active = true;
+
+    if (only_rotate) {
+        targets[id].isAtPosition = true;
+    }
 
     if (id < index) index = 0;
 

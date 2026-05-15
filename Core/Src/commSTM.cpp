@@ -270,6 +270,7 @@ void USB_Comm_Process(void) {
                 char* xTok = strtok(nullptr, ";");
                 char* yTok = strtok(nullptr, ";");
                 char* tTok = strtok(nullptr, ";");
+                char* onlyRotateTok = strtok(nullptr, ";");
 
                 if (!idTok || !typeTok || !xTok || !yTok || !tTok) {
                     break;
@@ -280,8 +281,9 @@ void USB_Comm_Process(void) {
                 float x = atof(xTok);
                 float y = atof(yTok);
                 float theta = atof(tTok);
+            	bool isOnlyRotate = strcmp(onlyRotateTok, "1");
 
-                Comm_AddWaypoint(id, type, x, y, theta);
+                Comm_AddWaypoint(id, type, x, y, theta, isOnlyRotate);
             }
             USB_Comm_Send("OK;WAYPOINT\n");
         }

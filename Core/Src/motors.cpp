@@ -22,7 +22,7 @@ void Motor::update() {
         return;
     }
 
-    int16_t max_step = 10;
+    int16_t max_step = 4;
 
     leftTarget_PWM  = std::max(-PWM_MAX, std::min((float)leftTarget_PWM,  PWM_MAX));
     rightTarget_PWM = std::max(-PWM_MAX, std::min((float)rightTarget_PWM, PWM_MAX));

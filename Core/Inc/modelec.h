@@ -17,11 +17,11 @@
 
 #define PWM_MAX 640.0f
 #define V_MAX 0.643f // m/s
-#define A_MAX 10.0f // m/s^2 huge value cause idk what to put there
+#define A_MAX 5.0f // m/s^2 huge value cause idk what to put there
 
 #define MAX_WAYPOINTS 16
 #define ENCODER_RES 2400.0f
-#define WHEEL_DIAMETER 0.0815f
+#define WHEEL_DIAMETER 0.0823f
 #define WHEEL_RADIUS (WHEEL_DIAMETER/2.0f)
 #define WHEEL_BASE 0.29f
 #define WHEEL_BASE_2 (WHEEL_BASE/2.0f)
@@ -60,7 +60,7 @@ public:
 	uint8_t action = 0;
 
 	uint32_t publishLastTick = 0;
-	uint32_t frequencyPublish = 300;
+	uint32_t frequencyPublish = 100;
 
 	float preciseAngleFinal = 0.002f;
 	float preciseAngle = 0.39f;
@@ -84,7 +84,7 @@ public:
 
     void update(float dt_actual);
 
-    void addTarget(int id, int type, float x, float y, float theta);
+    void addTarget(int id, int type, float x, float y, float theta, bool only_rotate);
 
 	void resetPID();
 

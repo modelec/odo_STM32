@@ -77,10 +77,10 @@ void Comm_StartOdometry(bool on) {
 	bot.stop(!on);
 }
 
-void Comm_AddWaypoint(int id, int type, float x, float y, float theta) {
+void Comm_AddWaypoint(int id, int type, float x, float y, float theta, bool only_rotate) {
 	theta = std::atan2(std::sin(theta), std::cos(theta));
 
-	bot.addTarget(id, type, x / 1000.0f, y / 1000.0f, theta);
+	bot.addTarget(id, type, x / 1000.0f, y / 1000.0f, theta, only_rotate);
 }
 
 float Comm_GetDistance(int n) {
@@ -169,7 +169,7 @@ void Comm_SetAlignment(uint8_t action) {
 		break;
 	}
 
-	bot.addTarget(0, 1, x, y, theta);
+	bot.addTarget(0, 1, x, y, theta, false);
 
 	Comm_SetAction(action);
 }
