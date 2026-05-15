@@ -169,11 +169,16 @@ void DiffBot::update(float dt_actual)
     } else {
         float angleTarget = atan2f(dy, dx);
         float angleError  = normalizeAngle(angleTarget - pos.theta);
-
         float direction = 1.0f;
-        if (std::abs(angleError) > (float)M_PI_2) {
+
+        if (std::abs(angleError) > (float)M_PI_2)
+        {
             direction = -1.0f;
-            angleError = normalizeAngle(angleError - (float)M_PI);
+
+            angleError = (angleError > 0) ? angleError - (float)M_PI
+                                          : angleError + (float)M_PI;
+
+            angleError = normalizeAngle(angleError);
         }
 
         wRef = pidTheta.compute(0, -angleError, dt);
@@ -233,6 +238,8 @@ void DiffBot::addTarget(int id, int type, float x, float y, float theta, bool on
 
     if (only_rotate) {
         targets[id].isAtPosition = true;
+        float angleErr = normalizeAngle(theta - pos.theta);
+        pidTheta.setPrevError(-angleErr);
     }
 
     if (id < index) index = 0;

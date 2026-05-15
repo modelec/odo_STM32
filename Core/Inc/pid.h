@@ -39,7 +39,7 @@ public:
     float getKd() const { return kd; }
     float getOutMin() const { return outMin; }
     float getOutMax() const { return outMax; }
-
+    void setPrevError(float x);
 };
 
 

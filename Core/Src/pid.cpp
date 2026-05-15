@@ -24,3 +24,8 @@ void PID::reset() {
 	integral = 0.0f;
 	prevError = 0.0f;
 }
+
+void PID::setPrevError(float x)
+{
+	prevError = x;
+}

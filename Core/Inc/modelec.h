@@ -17,13 +17,13 @@
 
 #define PWM_MAX 640.0f
 #define V_MAX 0.643f // m/s
-#define A_MAX 5.0f // m/s^2 huge value cause idk what to put there
+#define A_MAX 2.0f // m/s^2 huge value cause idk what to put there
 
 #define MAX_WAYPOINTS 16
 #define ENCODER_RES 2400.0f
-#define WHEEL_DIAMETER 0.0823f
+#define WHEEL_DIAMETER 0.0817f
 #define WHEEL_RADIUS (WHEEL_DIAMETER/2.0f)
-#define WHEEL_BASE 0.29f
+#define WHEEL_BASE 0.292f
 #define WHEEL_BASE_2 (WHEEL_BASE/2.0f)
 
 extern TIM_HandleTypeDef htim3;
